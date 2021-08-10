@@ -2,6 +2,7 @@
 
 # Fake Mail Server
 logs
+generated_tests
 
 # Development
 .idea

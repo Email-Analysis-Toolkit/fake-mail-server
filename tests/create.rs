@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use fake_mail_server::escape;
+use fake_mail_server::utils::escape;
 use imap_codec::{
     codec::Encode,
     types::{

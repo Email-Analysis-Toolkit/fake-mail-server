@@ -122,7 +122,8 @@ pub trait Splitter {
                 }
             }
 
-            let res = timeout(Duration::from_secs(1), self.stream().read(&mut read_buffer)).await;
+            // FIXME: Make timeout configurable
+            let res = timeout(Duration::from_secs(5), self.stream().read(&mut read_buffer)).await;
 
             let res = match res {
                 Ok(res) => res,

@@ -1,3 +1,6 @@
+![CI](https://github.com/Email-Analysis-Toolkit/fake-mail-server/actions/workflows/ci.yml/badge.svg)
+![Scheduled](https://github.com/Email-Analysis-Toolkit/fake-mail-server/actions/workflows/scheduled.yml/badge.svg)
+
 # Fake Mail Server
 
 ## 1) Overview

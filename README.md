@@ -173,6 +173,12 @@ You can your new testcase as needed (e.g., change the STARTTLS response to `Some
 $ sudo ./fake_mail_server test thunderbird imap testcases/imap/Negotiation/O_new.ron
 ```
 
+## Background
+
+This tool was published as part of our research on security vulnerabilities in STARTTLS:
+
+* https://nostarttls.secvuln.info/
+
 # License
 
 Licensed under either of

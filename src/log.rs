@@ -1,6 +1,9 @@
 use std::{collections::HashMap, fmt};
 
-use ansi_term::Colour::{Blue as ColorServer, Red as ColorClient};
+use ansi_term::{
+    Colour::{self, Blue as ColorServer, Red as ColorClient},
+    Style,
+};
 use tracing::{field::Field, span::Attributes, Event, Id, Level, Subscriber};
 use tracing_subscriber::{field::Visit, layer::Context, registry::LookupSpan, Layer};
 
@@ -67,7 +70,9 @@ impl<S: Subscriber + for<'lookup> LookupSpan<'lookup>> Layer<S> for TraceLayer {
         if *event.metadata().level() == Level::ERROR {
             if let Some(span) = ctx.lookup_current() {
                 if let Some(session) = span.extensions().get::<Session>() {
-                    print!("{} | ", session.sid);
+                    let color = Colour::Fixed(session.sid.chars().next().unwrap() as u8);
+
+                    print!("{} | ", Style::default().on(color).paint(&session.sid));
                 }
                 if let Some(session_test) = span.extensions().get::<SessionTest>() {
                     print!(
@@ -106,10 +111,18 @@ impl<S: Subscriber + for<'lookup> LookupSpan<'lookup>> Layer<S> for TraceLayer {
             }
         };
 
+        let bg_color = Colour::Fixed(prefix.chars().next().unwrap() as u8);
+
         if eventv.get("message").unwrap() == "accept compression" {
-            println!("{} | <----- Compression ----->", prefix);
+            println!(
+                "{} | <----- Compression ----->",
+                Style::default().on(bg_color).paint(&prefix)
+            );
         } else if eventv.get("message").unwrap() == "accept tls" {
-            println!("{} | <----- TLS handshake ----->", prefix);
+            println!(
+                "{} | <----- TLS handshake ----->",
+                Style::default().on(bg_color).paint(&prefix)
+            );
         } else {
             let (sym, color) = match (eventv.get("message").unwrap(), eventv.get("tls").unwrap()) {
                 ("send", "false") => ("S:", ColorServer.normal()),
@@ -122,10 +135,20 @@ impl<S: Subscriber + for<'lookup> LookupSpan<'lookup>> Layer<S> for TraceLayer {
             let lines = eventv.get("msg").unwrap().lines().collect::<Vec<_>>();
 
             if let Some((first, rest)) = lines.split_first() {
-                println!("{} | {} {}", prefix, sym, color.paint(*first));
+                println!(
+                    "{} | {} {}",
+                    Style::default().on(bg_color).paint(&prefix),
+                    sym,
+                    color.paint(*first)
+                );
 
                 for line in rest.iter() {
-                    println!("{} | {} {}", prefix, "..", color.paint(*line));
+                    println!(
+                        "{} | {} {}",
+                        Style::default().on(bg_color).paint(&prefix),
+                        "..",
+                        color.paint(*line)
+                    );
                 }
             }
         }

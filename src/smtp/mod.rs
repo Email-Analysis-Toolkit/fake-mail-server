@@ -125,13 +125,20 @@ impl Splitter for SmtpServer {
                 Command::Data => {
                     self.send(Response::other(354, "...")).await;
 
+                    let mut mail = String::new();
+
                     loop {
                         let line = self.recv(single_line).await.unwrap();
 
                         if line == "." {
                             break;
                         }
+
+                        mail.push_str(&line);
+                        mail.push_str("\n");
                     }
+
+                    info!(%mail, "You've Got Mail!");
 
                     self.send(Response::other(250, "...")).await;
                 }

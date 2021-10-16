@@ -95,8 +95,8 @@ pub trait Splitter {
         loop {
             // Try to split off a full command from self.buffer first.
             match split_off_message(self.buffer(), &parse) {
-                SplitOffResult::Ok((raw, parsed)) => {
-                    debug!(remainder=%escape(&raw), ?parsed, "Parsing successful");
+                SplitOffResult::Ok((consumed, parsed)) => {
+                    debug!(consumed=%escape(&consumed), remaining=%escape(self.buffer()), ?parsed, "Parsing successful");
 
                     if !self.buffer().is_empty() {
                         debug!(len = self.buffer().len(), "Buffer still has bytes");

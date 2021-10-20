@@ -13,7 +13,7 @@ async-compression  = { version = "*", features = ["tokio", "deflate"] }
 base64             = "*"
 bytes              = "*"
 itertools          = "*"
-nom                = "*"
+nom                = "6"
 mailparse          = "*"
 rand               = "*"
 structopt          = "*"

@@ -32,18 +32,21 @@ async fn spawn_benign_smtp(main_config: Config) -> anyhow::Result<()> {
     };
 
     loop {
-        let socket = accept_new_connection(&listener, &main_config.filter).await?;
+        let span = info_span!(
+            "session",
+            sid=%sample_sid(),
+        );
+
+        let socket = accept_new_connection(&listener, &main_config.filter)
+            .instrument(span.clone())
+            .await?;
         let test_config = test_config.clone();
 
-        tokio::spawn(async move {
+        tokio::spawn(
             SmtpServer::new(ConsolidatedStream::new(Box::new(socket)), test_config)
                 .run()
-                .instrument(info_span!(
-                    "session",
-                    sid = %sample_sid()
-                ))
-                .await;
-        });
+                .instrument(span),
+        );
     }
 }
 
@@ -58,18 +61,21 @@ async fn spawn_benign_pop3(main_config: Config) -> anyhow::Result<()> {
     };
 
     loop {
-        let socket = accept_new_connection(&listener, &main_config.filter).await?;
+        let span = info_span!(
+            "session",
+            sid=%sample_sid(),
+        );
+
+        let socket = accept_new_connection(&listener, &main_config.filter)
+            .instrument(span.clone())
+            .await?;
         let test_config = test_config.clone();
 
-        tokio::spawn(async move {
+        tokio::spawn(
             Pop3Server::new(ConsolidatedStream::new(Box::new(socket)), test_config)
                 .run()
-                .instrument(info_span!(
-                    "session",
-                    sid = %sample_sid()
-                ))
-                .await;
-        });
+                .instrument(span),
+        );
     }
 }
 
@@ -92,23 +98,27 @@ async fn spawn_benign_imap(main_config: Config) -> anyhow::Result<()> {
     };
 
     loop {
-        let socket = accept_new_connection(&listener, &main_config.filter).await?;
+        let span = info_span!(
+            "session",
+            sid=%sample_sid(),
+        );
+
+        let socket = accept_new_connection(&listener, &main_config.filter)
+            .instrument(span.clone())
+            .await?;
         let test_config = test_config.clone();
+
         let account = account.clone();
 
-        tokio::spawn(async move {
+        tokio::spawn(
             ImapServer::new(
                 ConsolidatedStream::new(Box::new(socket)),
                 account,
                 test_config,
             )
             .run()
-            .instrument(info_span!(
-                "session",
-                sid = %sample_sid()
-            ))
-            .await;
-        });
+            .instrument(span),
+        );
     }
 }
 
@@ -223,6 +233,10 @@ async fn accept_new_connection(listener: &TcpListener, filter: &Filter) -> io::R
         let (stream, addr) = listener.accept().await?;
 
         if filter.accepts(&addr.to_string()) {
+            let local_addr = stream.local_addr().unwrap();
+            let peer_addr = stream.peer_addr().unwrap();
+
+            info!(%local_addr, %peer_addr, "accept");
             break Ok(stream);
         } else {
             println!("blocked {}", addr.to_string());

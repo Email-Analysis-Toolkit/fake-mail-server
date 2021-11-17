@@ -23,7 +23,7 @@ serde              = "*"
 
 tracing            = "*"
 tracing-appender   = "*"
-tracing-subscriber = { version = "*", features=["json"] }
+tracing-subscriber = { version = "*", features=["json", "env-filter"] }
 
 async-trait        = "*"
 pin-project        = "*"

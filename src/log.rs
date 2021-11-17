@@ -14,7 +14,7 @@ pub struct TraceLayer {
 }
 
 impl<S: Subscriber + for<'lookup> LookupSpan<'lookup>> Layer<S> for TraceLayer {
-    fn new_span(&self, attrs: &Attributes, id: &Id, ctx: Context<S>) {
+    fn on_new_span(&self, attrs: &Attributes, id: &Id, ctx: Context<S>) {
         if !matches!(attrs.metadata().name(), "session" | "session_test") {
             return;
         }

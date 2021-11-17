@@ -117,6 +117,6 @@ impl Mail {
 
     pub fn body(&self) -> String {
         let splits: Vec<_> = self.data.split("\r\n\r\n").collect();
-        format!("{}", splits[1])
+        splits[1].to_string()
     }
 }

@@ -135,7 +135,7 @@ impl Splitter for SmtpServer {
                         }
 
                         mail.push_str(&line);
-                        mail.push_str("\n");
+                        mail.push('\n');
                     }
 
                     info!(%mail, "You've Got Mail!");

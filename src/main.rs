@@ -239,7 +239,7 @@ async fn accept_new_connection(listener: &TcpListener, filter: &Filter) -> io::R
             info!(%local_addr, %peer_addr, "accept");
             break Ok(stream);
         } else {
-            println!("blocked {}", addr.to_string());
+            println!("blocked {}", addr);
         }
     }
 }
@@ -260,10 +260,7 @@ fn reset_sut(config: &Config, application: &str, protocol: Protocol) -> anyhow::
         }
 
         if !output.status.success() {
-            Err(StringError::new(format!(
-                "Script failed with {}",
-                output.status
-            )))?;
+            return Err(StringError::new(format!("Script failed with {}", output.status)).into());
         }
     }
 

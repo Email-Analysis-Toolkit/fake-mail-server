@@ -624,7 +624,7 @@ impl ImapServer {
                                 .enumerate()
                                 .find(|(_, mail)| mail.uid == uid)
                             {
-                                let res = responses::attr_to_data(&mail, &fetch_attrs);
+                                let res = responses::attr_to_data(mail, &fetch_attrs);
                                 let resp = format!("* {} FETCH ({})\r\n", seq + 1, res);
                                 self.send_raw(resp.as_bytes()).await;
                             } else {
@@ -638,7 +638,7 @@ impl ImapServer {
                         for seq in iterator.take(500) {
                             // Safe subtraction: this code is not reachable with seq == 0
                             if let Some(mail) = selected.mails.get(seq as usize - 1) {
-                                let res = responses::attr_to_data(&mail, &fetch_attrs);
+                                let res = responses::attr_to_data(mail, &fetch_attrs);
                                 let resp = format!("* {} FETCH ({})\r\n", seq, res);
                                 self.send_raw(resp.as_bytes()).await;
                             } else {
@@ -705,7 +705,7 @@ impl ImapServer {
             }
         }
 
-        return true;
+        true
     }
 }
 

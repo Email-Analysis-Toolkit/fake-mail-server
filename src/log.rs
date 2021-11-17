@@ -98,7 +98,7 @@ impl<S: Subscriber + for<'lookup> LookupSpan<'lookup>> Layer<S> for TraceLayer {
             match span.metadata().name() {
                 "session" => {
                     let session = extn.get::<Session>().unwrap();
-                    format!("{}", session.sid)
+                    session.sid.to_string()
                 }
                 "session_test" => {
                     let session_test = extn.get::<SessionTest>().unwrap();
@@ -144,9 +144,8 @@ impl<S: Subscriber + for<'lookup> LookupSpan<'lookup>> Layer<S> for TraceLayer {
 
                 for line in rest.iter() {
                     println!(
-                        "{} | {} {}",
+                        "{} | .. {}",
                         Style::default().on(bg_color).paint(&prefix),
-                        "..",
                         color.paint(*line)
                     );
                 }

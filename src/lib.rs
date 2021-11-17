@@ -162,7 +162,7 @@ pub trait Splitter {
 
         if !self.buffer().is_empty() {
             error!(
-                buffer=%escape(&self.buffer()),
+                buffer=%escape(self.buffer()),
                 "Protocol violation. There is remaining data in the buffer."
             );
             error!("Keep the command injection vulnerability for demonstration purposes.");

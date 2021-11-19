@@ -37,9 +37,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.45"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee10e43ae4a853c0a3591d4e2ada1719e553be18199d9da9d4a83f5927c2f5c7"
+checksum = "38d9ff5d688f1c13395289f67db01d4826b46dd694e7580accdc3e8430f2d98e"
 
 [[package]]
 name = "arrayvec"
@@ -339,10 +339,11 @@ dependencies = [
 
 [[package]]
 name = "imap-codec"
-version = "0.3.0"
-source = "git+https://github.com/duesee/imap-codec?branch=main#62ca5ca313e13cbfdf2059a99551f1b31b49cfdb"
+version = "0.5.0"
+source = "git+https://github.com/duesee/imap-codec?branch=main#c06b7f7b0ab6cf08cbb871f35e6db48d863f2c43"
 dependencies = [
  "abnf-core",
+ "base64 0.13.0",
  "chrono",
  "nom",
  "rand",
@@ -820,9 +821,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.70"
+version = "1.0.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e277c495ac6cd1a01a58d0a0c574568b4d1ddf14f59965c6a58b8d96400b54f3"
+checksum = "063bf466a64011ac24040a49009724ee60a57da1b437617ceb32e53ad61bfb19"
 dependencies = [
  "itoa",
  "ryu",

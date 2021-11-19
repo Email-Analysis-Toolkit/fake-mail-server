@@ -1,5 +1,6 @@
 use std::{
     convert::{AsRef, TryFrom},
+    num::NonZeroU32,
     path::Path,
 };
 
@@ -29,7 +30,7 @@ impl Account {
         };
 
         let mut rng = rand::thread_rng();
-        let uid: u32 = rng.gen();
+        let uid: NonZeroU32 = rng.gen();
         let amt: u32 = files.len() as u32;
 
         let mut folders = Vec::new();
@@ -40,13 +41,16 @@ impl Account {
                     &[String::from("\\Subscribed")],
                     ".",
                     name,
-                    rng.gen::<u32>(),
-                    uid + amt + 1,
+                    rng.gen::<NonZeroU32>(),
+                    NonZeroU32::try_from(uid.get() + amt + 1).unwrap(),
                 );
 
                 if *name == "INBOX" {
                     for (i, path) in files.iter().enumerate() {
-                        folder.push_mail(Mail::from_file(path, i as u32 + 1)?);
+                        folder.push_mail(Mail::from_file(
+                            path,
+                            NonZeroU32::try_from(i as u32 + 1).unwrap(),
+                        )?);
                     }
                 }
 
@@ -74,13 +78,19 @@ pub struct Folder {
     pub flags: Vec<String>,
     pub sep: String,
     pub name: String,
-    pub uidvalidity: u32,
+    pub uidvalidity: NonZeroU32,
     pub mails: Vec<Mail>,
-    pub uidnext: u32,
+    pub uidnext: NonZeroU32,
 }
 
 impl Folder {
-    pub fn new(flags: &[String], sep: &str, name: &str, uidvalidity: u32, uidnext: u32) -> Folder {
+    pub fn new(
+        flags: &[String],
+        sep: &str,
+        name: &str,
+        uidvalidity: NonZeroU32,
+        uidnext: NonZeroU32,
+    ) -> Folder {
         Folder {
             flags: flags.to_owned(),
             sep: sep.to_owned(),
@@ -98,12 +108,12 @@ impl Folder {
 
 #[derive(Clone, Debug)]
 pub struct Mail {
-    pub uid: u32,
+    pub uid: NonZeroU32,
     pub data: String,
 }
 
 impl Mail {
-    pub fn from_file<P: AsRef<Path>>(path: P, uid: u32) -> std::io::Result<Mail> {
+    pub fn from_file<P: AsRef<Path>>(path: P, uid: NonZeroU32) -> std::io::Result<Mail> {
         let data = std::fs::read_to_string(&path)
             .unwrap_or_else(|_| panic!("Could not read mail file: \"{:?}\"", path.as_ref()));
 

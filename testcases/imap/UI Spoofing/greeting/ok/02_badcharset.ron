@@ -3,7 +3,7 @@
 
 	greeting: Ok(
 		tag: None,
-		code: Some(BadCharset([Charset("kkgIhdNV")])),
+		code: Some(BadCharset([Atom(Atom("kkgIhdNV"))])),
 		text: Text("MyF21bpV")
 	),
 

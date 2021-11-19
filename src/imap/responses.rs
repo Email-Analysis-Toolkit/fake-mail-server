@@ -1,13 +1,13 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 use imap_codec::{
     codec::Encode,
     types::{
-        command::StatusItem,
-        data_items::{DataItem, Section},
+        command::StatusAttribute,
+        fetch_attributes::{FetchAttribute, Section},
         flag::Flag,
         mailbox::{ListMailbox, Mailbox},
-        response::{Code, Data, Status, StatusItemResponse},
+        response::{Code, Data, Status, StatusAttributeValue},
     },
 };
 use tracing::error;
@@ -42,12 +42,12 @@ fn canonical_form(
     }
 }
 
-pub fn attr_to_data(mail: &Mail, fetch_attrs: &[DataItem]) -> String {
+pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
     fetch_attrs.iter().map(|fetch_attr| {
         match fetch_attr {
-            DataItem::Body => unimplemented!(),
+            FetchAttribute::Body => unimplemented!(),
 
-            DataItem::BodyExt{section, partial, peek: _} => {
+            FetchAttribute::BodyExt{section, partial, peek: _} => {
                 match section {
                     Some(ref section) => {
                         match *partial {
@@ -55,7 +55,7 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[DataItem]) -> String {
                                 if first != 0 {
                                     unimplemented!()
                                 }
-                                let ret = std::cmp::min(mail.body().len() as u32, maximum);
+                                let ret = std::cmp::min(mail.body().len() as u32, maximum.get());
                                 // FIXME: Do not ignore section.
                                 format!("BODY[1]<{}> {{{}}}\r\n{}", ret, ret, &mail.body()[..ret as usize]) // YOLO! (will panic if on UTF-8 boundary... ignore section
                             }
@@ -97,7 +97,7 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[DataItem]) -> String {
                                 if first != 0 {
                                     unimplemented!()
                                 }
-                                let ret = std::cmp::min(mail.body().len() as u32, maximum);
+                                let ret = std::cmp::min(mail.body().len() as u32, maximum.get());
                                 format!("BODY[]<{}> {{{}}}\r\n{}", ret, ret, &mail.body()[..ret as usize]) // YOLO! (will panic if on UTF-8 boundary...
                             }
                             None => {
@@ -108,16 +108,16 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[DataItem]) -> String {
                 }
             },
 
-            DataItem::BodyStructure => format!("BODYSTRUCTURE (\"TEXT\" \"PLAIN\" (\"CHARSET\" \"US-ASCII\") NIL NIL \"7BIT\" {} {})", mail.body().len(), mail.body().lines().count()),
+            FetchAttribute::BodyStructure => format!("BODYSTRUCTURE (\"TEXT\" \"PLAIN\" (\"CHARSET\" \"US-ASCII\") NIL NIL \"7BIT\" {} {})", mail.body().len(), mail.body().lines().count()),
 
-            DataItem::Envelope => "ENVELOPE \"\"".to_string(), // FIXME
-            DataItem::Flags => format!("FLAGS {}", "(\\Recent)"),
-            DataItem::InternalDate => format!("INTERNALDATE \"{}\"", "01-Oct-2019 12:34:56 +0000"),
-            DataItem::Rfc822 => unimplemented!(),
-            DataItem::Rfc822Header => format!("RFC822.HEADER {{{}}}\r\n{}", mail.header().len(), mail.header()),
-            DataItem::Rfc822Size => format!("RFC822.SIZE {}", mail.body().len()),
-            DataItem::Rfc822Text => unimplemented!(),
-            DataItem::Uid => format!("UID {}", mail.uid),
+            FetchAttribute::Envelope => "ENVELOPE \"\"".to_string(), // FIXME
+            FetchAttribute::Flags => format!("FLAGS {}", "(\\Recent)"),
+            FetchAttribute::InternalDate => format!("INTERNALDATE \"{}\"", "01-Oct-2019 12:34:56 +0000"),
+            FetchAttribute::Rfc822 => unimplemented!(),
+            FetchAttribute::Rfc822Header => format!("RFC822.HEADER {{{}}}\r\n{}", mail.header().len(), mail.header()),
+            FetchAttribute::Rfc822Size => format!("RFC822.SIZE {}", mail.body().len()),
+            FetchAttribute::Rfc822Text => unimplemented!(),
+            FetchAttribute::Uid => format!("UID {}", mail.uid),
         }
     }).collect::<Vec<String>>().join(" ")
 }
@@ -138,7 +138,7 @@ pub async fn ret_select_data(client: &mut ImapServer, folder: &Folder) {
         .send(
             Status::ok(
                 None,
-                Some(Code::Unseen(1)),
+                Some(Code::Unseen(1.try_into().unwrap())),
                 "first message without the \\Seen flag set.",
             )
             .unwrap(),
@@ -189,7 +189,7 @@ pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                 .send(Data::List {
                     items: vec![],
                     delimiter: Some('/'),
-                    mailbox: Mailbox::from(""),
+                    mailbox: Mailbox::try_from("").unwrap(),
                 })
                 .await;
         }
@@ -200,7 +200,7 @@ pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                         .send(Data::List {
                             items: vec![],
                             delimiter: Some('/'),
-                            mailbox: Mailbox::from(mailbox),
+                            mailbox: Mailbox::try_from(mailbox).unwrap(),
                         })
                         .await;
                 }
@@ -209,10 +209,10 @@ pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                     .send(Data::List {
                         items: vec![],
                         delimiter: Some('/'),
-                        mailbox: Mailbox::from(canonical),
+                        mailbox: Mailbox::try_from(canonical).unwrap(),
                     })
                     .await;
-            } else if Mailbox::from(canonical) == Mailbox::Inbox {
+            } else if Mailbox::try_from(canonical).unwrap() == Mailbox::Inbox {
                 client
                     .send(Data::List {
                         items: vec![],
@@ -233,7 +233,7 @@ pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                 .send(Data::List {
                     items: vec![],
                     delimiter: Some('/'),
-                    mailbox: Mailbox::from(""),
+                    mailbox: Mailbox::try_from("").unwrap(),
                 })
                 .await;
         }
@@ -244,7 +244,7 @@ pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                         .send(Data::List {
                             items: vec![],
                             delimiter: Some('/'),
-                            mailbox: Mailbox::from(mailbox),
+                            mailbox: Mailbox::try_from(mailbox).unwrap(),
                         })
                         .await;
                 }
@@ -253,10 +253,10 @@ pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                     .send(Data::List {
                         items: vec![],
                         delimiter: Some('/'),
-                        mailbox: Mailbox::from(canonical),
+                        mailbox: Mailbox::try_from(canonical).unwrap(),
                     })
                     .await;
-            } else if Mailbox::from(canonical) == Mailbox::Inbox {
+            } else if Mailbox::try_from(canonical).unwrap() == Mailbox::Inbox {
                 client
                     .send(Data::List {
                         items: vec![],
@@ -270,22 +270,26 @@ pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox
     }
 }
 
-pub async fn ret_status_data(client: &mut ImapServer, folder: &Folder, items: &[StatusItem]) {
-    let items = items
+pub async fn ret_status_data(
+    client: &mut ImapServer,
+    folder: &Folder,
+    attributes: &[StatusAttribute],
+) {
+    let attributes = attributes
         .iter()
         .map(|items| match items {
-            StatusItem::Messages => StatusItemResponse::Messages(folder.mails.len() as u32),
-            StatusItem::Unseen => StatusItemResponse::Unseen(folder.mails.len() as u32),
-            StatusItem::UidValidity => StatusItemResponse::UidValidity(folder.uidvalidity),
-            StatusItem::UidNext => StatusItemResponse::UidNext(folder.uidnext),
-            StatusItem::Recent => StatusItemResponse::Recent(folder.mails.len() as u32),
+            StatusAttribute::Messages => StatusAttributeValue::Messages(folder.mails.len() as u32),
+            StatusAttribute::Unseen => StatusAttributeValue::Unseen(folder.mails.len() as u32),
+            StatusAttribute::UidValidity => StatusAttributeValue::UidValidity(folder.uidvalidity),
+            StatusAttribute::UidNext => StatusAttributeValue::UidNext(folder.uidnext),
+            StatusAttribute::Recent => StatusAttributeValue::Recent(folder.mails.len() as u32),
         })
         .collect();
 
     client
         .send(Data::Status {
             mailbox: Mailbox::try_from(folder.name.clone()).unwrap(),
-            items,
+            attributes,
         })
         .await;
 }

@@ -1,4 +1,8 @@
-use std::{convert::TryFrom, thread::sleep, time::Duration};
+use std::{
+    convert::{TryFrom, TryInto},
+    thread::sleep,
+    time::Duration,
+};
 
 use async_trait::async_trait;
 use bytes::BytesMut;
@@ -8,12 +12,12 @@ use imap_codec::{
     parse::command::{authenticate_data, command, idle_done},
     state::State,
     types::{
-        command::{Command, CommandBody, SearchKey::Header, StatusItem},
+        command::{Command, CommandBody, SearchKey::Header, StatusAttribute},
         core::Tag,
-        data_items::{DataItem, MacroOrDataItems},
+        fetch_attributes::{FetchAttribute, MacroOrFetchAttributes},
         mailbox::Mailbox,
-        response::{Capability, Code, Continuation, Data, Status, StatusItemResponse},
-        sequence::{SequenceSet, Strategy},
+        response::{Capability, Code, Continuation, Data, Status, StatusAttributeValue},
+        sequence::Strategy,
         AuthMechanism,
     },
 };
@@ -136,7 +140,7 @@ impl ImapServer {
                 } => {
                     match mechanism {
                         AuthMechanism::Plain => {
-                            let credentials_b64 = match initial_response {
+                            let credentials = match initial_response {
                                 Some(credentials) => credentials,
                                 None => {
                                     // TODO: this is not standard-conform, because `text` is `1*TEXT-CHAR`.
@@ -146,17 +150,13 @@ impl ImapServer {
                                 }
                             };
 
-                            if let Ok(credentials) = base64::decode(credentials_b64.trim()) {
-                                info!(
-                                    credentials=%escape(&credentials),
-                                    "base64-decoded and escaped"
-                                );
-                            } else {
-                                error!(data=%credentials_b64.trim(), "credentials are not valid base64");
-                            }
+                            info!(
+                                credentials=%escape(&credentials),
+                                "base64-decoded and escaped"
+                            );
                         }
                         AuthMechanism::Login => {
-                            let username_b64 = match initial_response {
+                            let username = match initial_response {
                                 Some(username) => username,
                                 None => {
                                     self.send_raw(b"+ VXNlcm5hbWU6\r\n").await;
@@ -164,28 +164,20 @@ impl ImapServer {
                                 }
                             };
 
-                            if let Ok(username) = base64::decode(username_b64.trim()) {
-                                info!(
-                                    username=%escape(&username),
-                                    "base64-decoded and escaped"
-                                );
-                            } else {
-                                error!(data=%username_b64.trim(), "username is not valid base64");
-                            }
+                            info!(
+                                username=%escape(&username),
+                                "base64-decoded and escaped"
+                            );
 
-                            let password_b64 = {
+                            let password = {
                                 self.send_raw(b"+ UGFzc3dvcmQ6\r\n").await;
                                 self.recv(authenticate_data).await.unwrap()
                             };
 
-                            if let Ok(password) = base64::decode(password_b64.trim()) {
-                                info!(
-                                    password=%escape(&password),
-                                    "base64-decoded and escaped"
-                                );
-                            } else {
-                                error!(data=%password_b64.trim(), "password is not valid base64");
-                            }
+                            info!(
+                                password=%escape(&password),
+                                "base64-decoded and escaped"
+                            );
                         }
                         AuthMechanism::Other(mechanism) => {
                             error!(?mechanism, "auth mechanism not supported");
@@ -378,27 +370,40 @@ impl ImapServer {
                         self.send(Status::ok(Some(command.tag), None, "lsub done.").unwrap())
                             .await;
                     }
-                    CommandBody::Status { mailbox, items } => {
+                    CommandBody::Status {
+                        mailbox,
+                        attributes,
+                    } => {
                         match self.account.get_folder_by_name(&mailbox) {
                             Some(folder) => {
-                                responses::ret_status_data(self, &folder, &items).await;
+                                responses::ret_status_data(self, &folder, &attributes).await;
                             }
                             None => {
                                 // Pretend to be mailbox with 0 mails.
-                                let items = items
+                                let attributes = attributes
                                     .iter()
-                                    .map(|items| match items {
-                                        StatusItem::Messages => StatusItemResponse::Messages(0),
-                                        StatusItem::Unseen => StatusItemResponse::Unseen(0),
-                                        StatusItem::UidValidity => {
-                                            StatusItemResponse::UidValidity(123_456)
+                                    .map(|attribute| match attribute {
+                                        StatusAttribute::Messages => {
+                                            StatusAttributeValue::Messages(0)
                                         }
-                                        StatusItem::UidNext => StatusItemResponse::UidNext(1),
-                                        StatusItem::Recent => StatusItemResponse::Recent(0),
+                                        StatusAttribute::Unseen => StatusAttributeValue::Unseen(0),
+                                        StatusAttribute::UidValidity => {
+                                            StatusAttributeValue::UidValidity(
+                                                123_456.try_into().unwrap(),
+                                            )
+                                        }
+                                        StatusAttribute::UidNext => {
+                                            StatusAttributeValue::UidNext(1.try_into().unwrap())
+                                        }
+                                        StatusAttribute::Recent => StatusAttributeValue::Recent(0),
                                     })
                                     .collect();
 
-                                self.send(Data::Status { mailbox, items }).await;
+                                self.send(Data::Status {
+                                    mailbox,
+                                    attributes,
+                                })
+                                .await;
                             }
                         }
                         self.send(Status::ok(Some(command.tag), None, "status done.").unwrap())
@@ -410,7 +415,10 @@ impl ImapServer {
                     }
 
                     CommandBody::Enable { capabilities } => {
-                        self.send(Data::Enabled { capabilities }).await;
+                        self.send(Data::Enabled {
+                            capabilities: capabilities.to_vec(),
+                        })
+                        .await;
                         self.send(Status::ok(Some(command.tag), None, "enable done.").unwrap())
                             .await;
                     }
@@ -522,21 +530,20 @@ impl ImapServer {
                     self.send(Status::ok(Some(command.tag), None, "lsub done.").unwrap())
                         .await;
                 }
-                CommandBody::Status { mailbox, items } => {
-                    match self.account.get_folder_by_name(&mailbox) {
-                        Some(folder) => {
-                            responses::ret_status_data(self, &folder, &items).await;
-                            self.send(Status::ok(Some(command.tag), None, "status done.").unwrap())
-                                .await;
-                        }
-                        None => {
-                            self.send(
-                                Status::no(Some(command.tag), None, "no such folder.").unwrap(),
-                            )
+                CommandBody::Status {
+                    mailbox,
+                    attributes,
+                } => match self.account.get_folder_by_name(&mailbox) {
+                    Some(folder) => {
+                        responses::ret_status_data(self, &folder, &attributes).await;
+                        self.send(Status::ok(Some(command.tag), None, "status done.").unwrap())
                             .await;
-                        }
                     }
-                }
+                    None => {
+                        self.send(Status::no(Some(command.tag), None, "no such folder.").unwrap())
+                            .await;
+                    }
+                },
                 CommandBody::Append { .. } => {
                     self.send(Status::ok(Some(command.tag), None, "append done.").unwrap())
                         .await;
@@ -568,7 +575,12 @@ impl ImapServer {
                             _ => {
                                 match selected {
                                     Mailbox::Inbox => {
-                                        self.send(Data::Search(vec![1, 2, 3])).await;
+                                        self.send(Data::Search(vec![
+                                            1.try_into().unwrap(),
+                                            2.try_into().unwrap(),
+                                            3.try_into().unwrap(),
+                                        ]))
+                                        .await;
                                     }
                                     Mailbox::Other(_) => {
                                         self.send(Data::Search(vec![])).await;
@@ -588,7 +600,7 @@ impl ImapServer {
                 }
                 CommandBody::Fetch {
                     ref sequence_set,
-                    ref items,
+                    ref attributes,
                     uid,
                 } => {
                     let selected = self.account.get_folder_by_name(selected).unwrap();
@@ -601,16 +613,16 @@ impl ImapServer {
                         return true;
                     }
 
-                    let sequence_set = SequenceSet(sequence_set.clone());
+                    let sequence_set = sequence_set.clone();
 
-                    let mut fetch_attrs = match items {
-                        MacroOrDataItems::Macro(macro_) => macro_.expand(),
-                        MacroOrDataItems::DataItems(items) => items.to_vec(),
+                    let mut fetch_attrs = match attributes {
+                        MacroOrFetchAttributes::Macro(macro_) => macro_.expand(),
+                        MacroOrFetchAttributes::FetchAttributes(items) => items.to_vec(),
                     };
 
                     if uid {
-                        if !fetch_attrs.contains(&DataItem::Uid) {
-                            fetch_attrs.insert(0, DataItem::Uid)
+                        if !fetch_attrs.contains(&FetchAttribute::Uid) {
+                            fetch_attrs.insert(0, FetchAttribute::Uid)
                         }
 
                         // Safe unwrap: this code is not reachable with an empty mailbox
@@ -632,12 +644,12 @@ impl ImapServer {
                             }
                         }
                     } else {
-                        let largest = selected.mails.len() as u32;
+                        let largest = (selected.mails.len() as u32).try_into().unwrap();
                         let iterator = sequence_set.iter(Strategy::Naive { largest });
 
                         for seq in iterator.take(500) {
                             // Safe subtraction: this code is not reachable with seq == 0
-                            if let Some(mail) = selected.mails.get(seq as usize - 1) {
+                            if let Some(mail) = selected.mails.get(seq.get() as usize - 1) {
                                 let res = responses::attr_to_data(mail, &fetch_attrs);
                                 let resp = format!("* {} FETCH ({})\r\n", seq, res);
                                 self.send_raw(resp.as_bytes()).await;

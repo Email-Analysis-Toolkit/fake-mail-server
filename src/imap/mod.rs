@@ -12,12 +12,13 @@ use imap_codec::{
     parse::command::{authenticate_data, command, idle_done},
     state::State,
     types::{
-        command::{Command, CommandBody, SearchKey::Header, StatusAttribute},
+        command::{Command, CommandBody, SearchKey::Header},
         core::Tag,
         fetch_attributes::{FetchAttribute, MacroOrFetchAttributes},
         mailbox::Mailbox,
-        response::{Capability, Code, Continuation, Data, Status, StatusAttributeValue},
+        response::{Capability, Code, Continuation, Data, Status},
         sequence::Strategy,
+        status_attributes::{StatusAttribute, StatusAttributeValue},
         AuthMechanism,
     },
 };

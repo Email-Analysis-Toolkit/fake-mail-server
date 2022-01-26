@@ -3,11 +3,12 @@ use std::convert::{TryFrom, TryInto};
 use imap_codec::{
     codec::Encode,
     types::{
-        command::StatusAttribute,
-        fetch_attributes::{FetchAttribute, Section},
+        fetch_attributes::FetchAttribute,
         flag::Flag,
         mailbox::{ListMailbox, Mailbox},
-        response::{Code, Data, Status, StatusAttributeValue},
+        response::{Code, Data, Status},
+        section::Section,
+        status_attributes::{StatusAttribute, StatusAttributeValue},
     },
 };
 use tracing::error;

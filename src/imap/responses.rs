@@ -3,6 +3,7 @@ use std::convert::{TryFrom, TryInto};
 use imap_codec::{
     codec::Encode,
     types::{
+        core::QuotedChar,
         fetch_attributes::FetchAttribute,
         flag::Flag,
         mailbox::{ListMailbox, Mailbox},
@@ -184,12 +185,14 @@ pub async fn ret_select_data(client: &mut ImapServer, folder: &Folder) {
 }
 
 pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox: &ListMailbox) {
+    let qc = QuotedChar::try_from('/').unwrap();
+
     match canonical_form(reference, mailbox) {
         Ok(Interpretation::HierarchyRequest) => {
             client
                 .send(Data::List {
                     items: vec![],
-                    delimiter: Some('/'),
+                    delimiter: Some(qc),
                     mailbox: Mailbox::try_from("").unwrap(),
                 })
                 .await;
@@ -200,7 +203,7 @@ pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                     client
                         .send(Data::List {
                             items: vec![],
-                            delimiter: Some('/'),
+                            delimiter: Some(qc),
                             mailbox: Mailbox::try_from(mailbox).unwrap(),
                         })
                         .await;
@@ -209,7 +212,7 @@ pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                 client
                     .send(Data::List {
                         items: vec![],
-                        delimiter: Some('/'),
+                        delimiter: Some(qc),
                         mailbox: Mailbox::try_from(canonical).unwrap(),
                     })
                     .await;
@@ -217,7 +220,7 @@ pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                 client
                     .send(Data::List {
                         items: vec![],
-                        delimiter: Some('/'),
+                        delimiter: Some(qc),
                         mailbox: Mailbox::Inbox,
                     })
                     .await;
@@ -228,12 +231,14 @@ pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox
 }
 
 pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox: &ListMailbox) {
+    let qc = QuotedChar::try_from('/').unwrap();
+
     match canonical_form(reference, mailbox) {
         Ok(Interpretation::HierarchyRequest) => {
             client
                 .send(Data::List {
                     items: vec![],
-                    delimiter: Some('/'),
+                    delimiter: Some(qc),
                     mailbox: Mailbox::try_from("").unwrap(),
                 })
                 .await;
@@ -244,7 +249,7 @@ pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                     client
                         .send(Data::List {
                             items: vec![],
-                            delimiter: Some('/'),
+                            delimiter: Some(qc),
                             mailbox: Mailbox::try_from(mailbox).unwrap(),
                         })
                         .await;
@@ -253,7 +258,7 @@ pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                 client
                     .send(Data::List {
                         items: vec![],
-                        delimiter: Some('/'),
+                        delimiter: Some(qc),
                         mailbox: Mailbox::try_from(canonical).unwrap(),
                     })
                     .await;
@@ -261,7 +266,7 @@ pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox
                 client
                     .send(Data::List {
                         items: vec![],
-                        delimiter: Some('/'),
+                        delimiter: Some(qc),
                         mailbox: Mailbox::Inbox,
                     })
                     .await;

@@ -89,10 +89,11 @@ impl ImapServer {
                 }
                 CommandBody::Capability => {
                     if self.stream.is_tls() {
-                        self.send(Data::Capability(self.config.caps_tls.clone()))
+                        self.send(Data::capability(self.config.caps_tls.clone()).unwrap())
                             .await;
                     } else {
-                        self.send(Data::Capability(self.config.caps.clone())).await;
+                        self.send(Data::capability(self.config.caps.clone()).unwrap())
+                            .await;
                     }
                     self.send(Status::ok(Some(command.tag), None, "capability done.").unwrap())
                         .await;
@@ -260,10 +261,10 @@ impl ImapServer {
                 match command.body {
                     CommandBody::Capability => {
                         if self.stream.is_tls() {
-                            self.send(Data::Capability(self.config.caps_tls_auth.clone()))
+                            self.send(Data::capability(self.config.caps_tls_auth.clone()).unwrap())
                                 .await;
                         } else {
-                            self.send(Data::Capability(self.config.caps_auth.clone()))
+                            self.send(Data::capability(self.config.caps_auth.clone()).unwrap())
                                 .await;
                         }
                         self.send(Status::ok(Some(command.tag), None, "capability done.").unwrap())
@@ -273,10 +274,13 @@ impl ImapServer {
                         self.send(
                             Status::no(
                                 Some(command.tag),
-                                Some(Code::Capability(vec![
-                                    Capability::Imap4Rev1,
-                                    Capability::Auth(AuthMechanism::Login),
-                                ])),
+                                Some(
+                                    Code::capability(vec![
+                                        Capability::Imap4Rev1,
+                                        Capability::Auth(AuthMechanism::Login),
+                                    ])
+                                    .unwrap(),
+                                ),
                                 "not allowed due to RFC.",
                             )
                             .unwrap(),
@@ -455,10 +459,10 @@ impl ImapServer {
             State::Selected(ref selected) => match command.body {
                 CommandBody::Capability => {
                     if self.stream.is_tls() {
-                        self.send(Data::Capability(self.config.caps_tls_auth.clone()))
+                        self.send(Data::capability(self.config.caps_tls_auth.clone()).unwrap())
                             .await;
                     } else {
-                        self.send(Data::Capability(self.config.caps_auth.clone()))
+                        self.send(Data::capability(self.config.caps_auth.clone()).unwrap())
                             .await;
                     }
                     self.send(Status::ok(Some(command.tag), None, "capability done.").unwrap())

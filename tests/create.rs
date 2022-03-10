@@ -15,7 +15,7 @@ mod test {
     use imap_codec::{
         codec::Encode,
         types::{
-            core::{IString, NString, Quoted},
+            core::{IString, NString, Quoted, QuotedChar},
             fetch_attributes::FetchAttributeValue,
             flag::Flag,
             mailbox::Mailbox,
@@ -28,16 +28,18 @@ mod test {
 
     #[test]
     fn generate_response() {
+        let qc = QuotedChar::try_from('/').unwrap();
+
         let some_things = &[
-            Data::Capability(vec![Capability::Idle]),
+            Data::capability(vec![Capability::Idle]).unwrap(),
             Data::List {
                 mailbox: Mailbox::try_from(gen_nonce()).unwrap(),
-                delimiter: Some('/'),
+                delimiter: Some(qc),
                 items: vec![],
             },
             Data::Lsub {
                 mailbox: Mailbox::try_from(gen_nonce()).unwrap(),
-                delimiter: Some('/'),
+                delimiter: Some(qc),
                 items: vec![],
             },
             Data::Status {
@@ -70,9 +72,9 @@ mod test {
             Data::Exists(54321),
             Data::Recent(12345),
             Data::Expunge(1.try_into().unwrap()),
-            Data::Fetch {
-                seq_or_uid: 1.try_into().unwrap(),
-                attributes: vec![FetchAttributeValue::BodyExt {
+            Data::fetch(
+                1,
+                vec![FetchAttributeValue::BodyExt {
                     data: NString(Some(IString::Quoted(
                         // Good and bad: Can't create invalid Quoted anymore!
                         // Quoted::try_from(
@@ -83,7 +85,8 @@ mod test {
                     origin: None,
                     section: None,
                 }],
-            },
+            )
+            .unwrap(),
             // ----- ENABLE Extension (RFC 5161) -----
             Data::Enabled {
                 capabilities: vec![Capability::Idle],

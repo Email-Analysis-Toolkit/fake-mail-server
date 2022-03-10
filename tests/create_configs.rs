@@ -10,7 +10,7 @@ use imap_codec::{
     codec::Encode,
     state::State,
     types::{
-        core::Tag,
+        core::{NonEmptyVec, Tag},
         response::{Capability, Code, Status},
         AuthMechanism,
     },
@@ -221,11 +221,14 @@ fn ok_greeting_codes() {
                 }
             }
         }
+
+        let cap_vec = NonEmptyVec::try_from(cap_vec).unwrap();
+
         codes.insert(cap_str.to_string(), Code::Capability(cap_vec));
     }
     codes.insert(
         "CAPABILITY_STARTTLS".to_string(),
-        Code::Capability(vec![Capability::Imap4Rev1, Capability::StartTls]),
+        Code::capability(vec![Capability::Imap4Rev1, Capability::StartTls]).unwrap(),
     );
     for (name, code) in codes {
         let greeting = Status::ok(None, Some(code), "Fake Mail server ready").unwrap();

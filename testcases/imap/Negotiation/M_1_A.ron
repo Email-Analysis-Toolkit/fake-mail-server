@@ -2,7 +2,7 @@
 	state: Authenticated,
 	greeting: PreAuth(
 		tag: None,
-		code: Some(Capability([Imap4Rev1, MailboxReferrals])),
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, MailboxReferrals]))),
 		text: Text("IMAP server ready.")
 	),
 	caps: [Imap4Rev1, MailboxReferrals],
@@ -22,4 +22,3 @@
 	),
 	implicit_tls: false,
 )
-

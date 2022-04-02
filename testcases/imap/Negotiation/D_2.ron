@@ -2,7 +2,7 @@
 	state: NotAuthenticated,
 	greeting: Ok(
 		tag: None,
-		code: Some(Capability([Other(Atom("IMAP4"))])),
+		code: Some(Capability(NonEmptyVec([Other(Atom("IMAP4"))]))),
 		text: Text("IMAP server ready.")
 	),
 
@@ -22,4 +22,3 @@
 	),
 	implicit_tls: false,
 )
-

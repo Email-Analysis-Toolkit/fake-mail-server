@@ -2,7 +2,7 @@
 	state: NotAuthenticated,
 	greeting: Ok(
 		tag: None,
-		code: Some(Capability([Imap4Rev1, MailboxReferrals, StartTls])),
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, MailboxReferrals, StartTls]))),
 		text: Text("IMAP server ready.")
 	),
 	caps: [Imap4Rev1, MailboxReferrals, StartTls],
@@ -22,4 +22,3 @@
 	),
 	implicit_tls: false,
 )
-

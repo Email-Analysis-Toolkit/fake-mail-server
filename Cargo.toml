@@ -32,4 +32,4 @@ tokio-native-tls   = "*"
 
 smtp-codec = { git = "https://github.com/duesee/smtp-codec", features = ["serdex"], branch = "main" }
 pop3-codec = { git = "https://github.com/duesee/pop3-codec", features = ["serdex"], branch = "main" }
-imap-codec = { git = "https://github.com/duesee/imap-codec", features = ["serdex"], branch = "main" }
+imap-codec = { git = "https://github.com/duesee/imap-codec", features = ["ext_idle", "ext_compress", "ext_enable", "serdex", "nomx"], branch = "main" }

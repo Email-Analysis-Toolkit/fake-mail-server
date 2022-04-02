@@ -1,7 +1,7 @@
 (
 	state: Authenticated,
 	greeting: PreAuth(
-		code: Some(Capability([Imap4Rev1, StartTls, Auth(Plain), Auth(Login)])),
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, StartTls, Auth(Plain), Auth(Login)]))),
 		text: Text("IMAP server ready.")
 	),
 	caps: [Imap4Rev1],

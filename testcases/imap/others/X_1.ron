@@ -2,7 +2,7 @@
 	state: NotAuthenticated,
 	greeting: Ok(
 		tag: None,
-		code: Some(Capability([
+		code: Some(Capability(NonEmptyVec([
 Imap4Rev1,
 Auth(Other(AuthMechanismOther(Atom("ANONYMOUS")))),
 Auth(Other(AuthMechanismOther(Atom("BINARY")))),
@@ -59,7 +59,7 @@ Auth(Other(AuthMechanismOther(Atom("XOAUTH2")))),
 Auth(Other(AuthMechanismOther(Atom("XSRVCTOKEN")))),
 Auth(Other(AuthMechanismOther(Atom("X_NORTEL_HMAC_MD5")))),
 Auth(Other(AuthMechanismOther(Atom("ZIMBRA")))),
-		])),
+		]))),
 		text: Text("IMAP server ready.")
 	),
 	caps: [

@@ -9,7 +9,10 @@ use bytes::BytesMut;
 use config::Config;
 use imap_codec::{
     codec::Encode,
-    parse::command::{authenticate_data, command, idle_done},
+    internal::{
+        rfc2177::idle_2,
+        rfc3501::{authenticate_2, command},
+    },
     state::State,
     types::{
         command::{Command, CommandBody, SearchKey::Header},
@@ -148,7 +151,7 @@ impl ImapServer {
                                     // TODO: this is not standard-conform, because `text` is `1*TEXT-CHAR`.
                                     //       Was this changed due to Mutt?
                                     self.send_raw(b"+ \r\n").await;
-                                    self.recv(authenticate_data).await.unwrap()
+                                    self.recv(authenticate_2).await.unwrap()
                                 }
                             };
 
@@ -162,7 +165,7 @@ impl ImapServer {
                                 Some(username) => username,
                                 None => {
                                     self.send_raw(b"+ VXNlcm5hbWU6\r\n").await;
-                                    self.recv(authenticate_data).await.unwrap()
+                                    self.recv(authenticate_2).await.unwrap()
                                 }
                             };
 
@@ -173,7 +176,7 @@ impl ImapServer {
 
                             let password = {
                                 self.send_raw(b"+ UGFzc3dvcmQ6\r\n").await;
-                                self.recv(authenticate_data).await.unwrap()
+                                self.recv(authenticate_2).await.unwrap()
                             };
 
                             info!(
@@ -700,7 +703,7 @@ impl ImapServer {
                 self.send(Data::Exists(4)).await;
                 sleep(Duration::from_secs(1));
 
-                self.recv(idle_done).await.unwrap();
+                self.recv(idle_2).await.unwrap();
                 self.send(
                     Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.").unwrap(),
                 )
@@ -712,7 +715,7 @@ impl ImapServer {
                 self.send(Data::Exists(4)).await;
                 sleep(Duration::from_secs(3));
 
-                self.recv(idle_done).await.unwrap();
+                self.recv(idle_2).await.unwrap();
                 self.send(
                     Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.").unwrap(),
                 )

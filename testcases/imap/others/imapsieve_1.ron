@@ -2,7 +2,7 @@
 	state: NotAuthenticated,
 	greeting: Ok(
 		tag: None,
-		code: Some(Capability([Imap4Rev1, StartTls, LoginDisabled, Other(Atom("IMAPSIEVE=sieve://example.org"))])),
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, StartTls, LoginDisabled, Other(Atom("IMAPSIEVE=sieve://example.org"))]))),
 		text: Text("IMAP server ready.")
 	),
 	caps: [Imap4Rev1, StartTls, LoginDisabled, Other(Atom("IMAPSIEVE=sieve://example.org"))],
@@ -16,4 +16,3 @@
 	),
 	implicit_tls: false,
 )
-

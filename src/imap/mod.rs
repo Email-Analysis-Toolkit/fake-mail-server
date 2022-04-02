@@ -1,8 +1,4 @@
-use std::{
-    convert::{TryFrom, TryInto},
-    thread::sleep,
-    time::Duration,
-};
+use std::convert::{TryFrom, TryInto};
 
 use async_trait::async_trait;
 use bytes::BytesMut;
@@ -10,8 +6,8 @@ use config::Config;
 use imap_codec::{
     codec::Encode,
     internal::{
-        rfc2177::idle_2,
-        rfc3501::{authenticate_2, command},
+        rfc2177::idle_done,
+        rfc3501::{authenticate_data, command},
     },
     state::State,
     types::{
@@ -151,7 +147,7 @@ impl ImapServer {
                                     // TODO: this is not standard-conform, because `text` is `1*TEXT-CHAR`.
                                     //       Was this changed due to Mutt?
                                     self.send_raw(b"+ \r\n").await;
-                                    self.recv(authenticate_2).await.unwrap()
+                                    self.recv(authenticate_data).await.unwrap()
                                 }
                             };
 
@@ -165,7 +161,7 @@ impl ImapServer {
                                 Some(username) => username,
                                 None => {
                                     self.send_raw(b"+ VXNlcm5hbWU6\r\n").await;
-                                    self.recv(authenticate_2).await.unwrap()
+                                    self.recv(authenticate_data).await.unwrap()
                                 }
                             };
 
@@ -176,7 +172,7 @@ impl ImapServer {
 
                             let password = {
                                 self.send_raw(b"+ UGFzc3dvcmQ6\r\n").await;
-                                self.recv(authenticate_2).await.unwrap()
+                                self.recv(authenticate_data).await.unwrap()
                             };
 
                             info!(
@@ -434,7 +430,18 @@ impl ImapServer {
                     CommandBody::Idle => {
                         self.send(Continuation::basic(None, "idle from auth.").unwrap())
                             .await;
-                        self.state = State::IdleAuthenticated(command.tag.to_string());
+                        self.send(Data::Exists(4)).await;
+
+                        self.recv(idle_done).await.unwrap();
+                        self.send(
+                            Status::ok(
+                                Some(Tag::try_from(command.tag).unwrap()),
+                                None,
+                                "idle done.",
+                            )
+                            .unwrap(),
+                        )
+                        .await;
                     }
 
                     CommandBody::Compress { .. } => {
@@ -681,7 +688,18 @@ impl ImapServer {
                 CommandBody::Idle => {
                     self.send(Continuation::basic(None, "idle from selected.").unwrap())
                         .await;
-                    self.state = State::IdleSelected(command.tag.to_string(), selected.clone());
+                    self.send(Data::Exists(4)).await;
+
+                    self.recv(idle_done).await.unwrap();
+                    self.send(
+                        Status::ok(
+                            Some(Tag::try_from(command.tag).unwrap()),
+                            None,
+                            "idle done.",
+                        )
+                        .unwrap(),
+                    )
+                    .await;
                 }
 
                 bad_command => {
@@ -699,29 +717,11 @@ impl ImapServer {
             State::Logout => {
                 info!("Logout.",);
             }
-            State::IdleAuthenticated(tag) => {
-                self.send(Data::Exists(4)).await;
-                sleep(Duration::from_secs(1));
-
-                self.recv(idle_2).await.unwrap();
-                self.send(
-                    Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.").unwrap(),
-                )
-                .await;
-
-                self.state = State::Authenticated;
+            State::IdleAuthenticated(_tag) => {
+                // Can't receive command here.
             }
-            State::IdleSelected(tag, folder) => {
-                self.send(Data::Exists(4)).await;
-                sleep(Duration::from_secs(3));
-
-                self.recv(idle_2).await.unwrap();
-                self.send(
-                    Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.").unwrap(),
-                )
-                .await;
-
-                self.state = State::Selected(folder);
+            State::IdleSelected(_tag, _folder) => {
+                // Can't receive command here.
             }
         }
 

@@ -331,7 +331,7 @@ dependencies = [
 [[package]]
 name = "imap-codec"
 version = "0.5.0"
-source = "git+https://github.com/duesee/imap-codec?branch=main#f7e0240676e52f0d9ea0217a278d47f348993df5"
+source = "git+https://github.com/duesee/imap-codec?branch=main#7ab68774587962e07925f172dc740cb514d53c00"
 dependencies = [
  "abnf-core",
  "base64",

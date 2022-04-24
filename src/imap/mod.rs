@@ -433,15 +433,8 @@ impl ImapServer {
                         self.send(Data::Exists(4)).await;
 
                         self.recv(idle_done).await.unwrap();
-                        self.send(
-                            Status::ok(
-                                Some(Tag::try_from(command.tag).unwrap()),
-                                None,
-                                "idle done.",
-                            )
-                            .unwrap(),
-                        )
-                        .await;
+                        self.send(Status::ok(Some(command.tag), None, "idle done.").unwrap())
+                            .await;
                     }
 
                     CommandBody::Compress { .. } => {
@@ -691,15 +684,8 @@ impl ImapServer {
                     self.send(Data::Exists(4)).await;
 
                     self.recv(idle_done).await.unwrap();
-                    self.send(
-                        Status::ok(
-                            Some(Tag::try_from(command.tag).unwrap()),
-                            None,
-                            "idle done.",
-                        )
-                        .unwrap(),
-                    )
-                    .await;
+                    self.send(Status::ok(Some(command.tag), None, "idle done.").unwrap())
+                        .await;
                 }
 
                 bad_command => {

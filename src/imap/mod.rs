@@ -1,26 +1,27 @@
-use std::convert::{TryFrom, TryInto};
+use std::{
+    borrow::Cow,
+    convert::{TryFrom, TryInto},
+};
 
 use async_trait::async_trait;
 use bytes::BytesMut;
 use config::Config;
 use imap_codec::{
-    codec::Encode,
-    internal::{
-        rfc2177::idle_done,
-        rfc3501::{authenticate_data, command},
-    },
-    state::State,
+    internal::{rfc2177::idle_done, rfc3501::authenticate_data},
     types::{
+        codec::Encode,
         command::{Command, CommandBody, SearchKey::Header},
         core::Tag,
         fetch_attributes::{FetchAttribute, MacroOrFetchAttributes},
         mailbox::Mailbox,
         response::{Capability, Code, Continuation, Data, Status},
         sequence::Strategy,
+        state::State,
         status_attributes::{StatusAttribute, StatusAttributeValue},
         AuthMechanism,
     },
 };
+use nom::{combinator::map, IResult};
 use tracing::{debug, error, info};
 
 use crate::{imap::account::Account, utils::escape, ConsolidatedStream, Splitter, PKCS12};
@@ -29,16 +30,16 @@ pub mod account;
 pub mod config;
 pub mod responses;
 
-pub struct ImapServer {
+pub struct ImapServer<'a> {
     account: Account,
     buffer: BytesMut,
-    config: Config,
-    state: State,
+    config: Config<'a>,
+    state: State<'a>,
     stream: ConsolidatedStream,
 }
 
-impl ImapServer {
-    pub fn new(stream: ConsolidatedStream, account: Account, config: Config) -> Self {
+impl<'a> ImapServer<'a> {
+    pub fn new(stream: ConsolidatedStream, account: Account, config: Config<'a>) -> Self {
         Self {
             account,
             buffer: BytesMut::new(),
@@ -57,7 +58,7 @@ impl ImapServer {
     /// "Statemachine"
     ///
     /// Testing can be done here.
-    async fn transition(&mut self, command: Command) -> bool {
+    async fn transition(&mut self, command: Command<'a>) -> bool {
         let mut ignored = if self.stream.is_tls() {
             self.config.ignore_commands_tls.iter()
         } else {
@@ -113,9 +114,7 @@ impl ImapServer {
                         Some(response) => {
                             //self.state = State::Authenticated;
                             self.send_raw(
-                                response
-                                    .replace("<tag>", &command.tag.to_string())
-                                    .as_bytes(),
+                                response.replace("<tag>", command.tag.inner()).as_bytes(),
                             )
                             .await;
                         }
@@ -147,7 +146,7 @@ impl ImapServer {
                                     // TODO: this is not standard-conform, because `text` is `1*TEXT-CHAR`.
                                     //       Was this changed due to Mutt?
                                     self.send_raw(b"+ \r\n").await;
-                                    self.recv(authenticate_data).await.unwrap()
+                                    Cow::Owned(self.recv(authenticate_data).await.unwrap())
                                 }
                             };
 
@@ -161,7 +160,7 @@ impl ImapServer {
                                 Some(username) => username,
                                 None => {
                                     self.send_raw(b"+ VXNlcm5hbWU6\r\n").await;
-                                    self.recv(authenticate_data).await.unwrap()
+                                    Cow::Owned(self.recv(authenticate_data).await.unwrap())
                                 }
                             };
 
@@ -715,8 +714,16 @@ impl ImapServer {
     }
 }
 
+// TODO: HackyHack ...
+pub fn command(input: &[u8]) -> IResult<&[u8], Command<'static>> {
+    use bounded_static::IntoBoundedStatic;
+    use imap_codec::rfc3501::command::command;
+
+    map(command, |cmd| cmd.into_static())(input)
+}
+
 #[async_trait]
-impl Splitter for ImapServer {
+impl<'a> Splitter for ImapServer<'a> {
     async fn run(mut self) {
         if self.config.implicit_tls {
             self.accept_tls().await;
@@ -742,7 +749,7 @@ impl Splitter for ImapServer {
                     let mut answered = false;
                     for (key, value) in self.config.override_response.clone() {
                         if key.to_lowercase() == cmd.name().to_lowercase() {
-                            let resp = value.replace("<tag>", cmd.tag.to_string().as_str());
+                            let resp = value.replace("<tag>", cmd.tag.inner());
                             self.send_raw(resp.as_bytes()).await;
                             answered = true;
                             continue;

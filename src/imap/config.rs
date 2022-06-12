@@ -1,24 +1,24 @@
 use std::collections::HashMap;
 
-use imap_codec::{
+use imap_codec::types::{
+    response::{Capability, Status},
     state::State,
-    types::response::{Capability, Status},
 };
 use serde::{Deserialize, Serialize};
 
 use crate::PKCS12;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Config {
-    pub state: State,
+pub struct Config<'a> {
+    pub state: State<'a>,
     #[serde(default = "default_greeting")]
-    pub greeting: Status,
+    pub greeting: Status<'a>,
     #[serde(default = "default_response_after_greeting")]
     pub response_after_greeting: Option<String>,
-    pub caps: Vec<Capability>,
-    pub caps_auth: Vec<Capability>,
-    pub caps_tls: Vec<Capability>,
-    pub caps_tls_auth: Vec<Capability>,
+    pub caps: Vec<Capability<'a>>,
+    pub caps_auth: Vec<Capability<'a>>,
+    pub caps_tls: Vec<Capability<'a>>,
+    pub caps_tls_auth: Vec<Capability<'a>>,
     #[serde(default = "default_starttls_response")]
     pub starttls_response: Option<String>,
     #[serde(default = "default_starttls_transition")]
@@ -34,11 +34,11 @@ pub struct Config {
     #[serde(default = "default_workaround")]
     pub workaround: Vec<String>,
     #[serde(default = "default_override_select")]
-    pub override_select: Option<Status>,
+    pub override_select: Option<Status<'a>>,
     #[serde(default = "default_override_login")]
-    pub override_login: Option<Status>,
+    pub override_login: Option<Status<'a>>,
     #[serde(default = "default_override_authenticate")]
-    pub override_authenticate: Option<Status>,
+    pub override_authenticate: Option<Status<'a>>,
     #[serde(default = "default_folders")]
     pub folders: Vec<String>,
     #[serde(default = "default_override_response")]
@@ -47,7 +47,7 @@ pub struct Config {
     pub implicit_tls: bool,
 }
 
-fn default_greeting() -> Status {
+fn default_greeting() -> Status<'static> {
     Status::ok(None, None, "Fake IMAP server ready.").unwrap()
 }
 
@@ -83,15 +83,15 @@ fn default_workaround() -> Vec<String> {
     vec![]
 }
 
-fn default_override_select() -> Option<Status> {
+fn default_override_select() -> Option<Status<'static>> {
     None
 }
 
-fn default_override_login() -> Option<Status> {
+fn default_override_login() -> Option<Status<'static>> {
     None
 }
 
-fn default_override_authenticate() -> Option<Status> {
+fn default_override_authenticate() -> Option<Status<'static>> {
     None
 }
 

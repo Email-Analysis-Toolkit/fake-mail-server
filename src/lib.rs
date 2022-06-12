@@ -88,7 +88,7 @@ pub trait Splitter {
     async fn recv<P, O>(&mut self, parse: P) -> Result<O, Vec<u8>>
     where
         P: Fn(&[u8]) -> IResult<&[u8], O> + Sync + Send,
-        O: Debug + Send,
+        O: Debug + Send + 'static,
     {
         let mut read_buffer = [0u8; 2048];
 

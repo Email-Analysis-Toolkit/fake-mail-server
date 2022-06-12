@@ -14,11 +14,11 @@ enum Strategy {
 
 struct PredictorIter<'a> {
     predictor: &'a Predictor,
-    current_tag: Tag,
+    current_tag: Tag<'a>,
 }
 
 impl<'a> Iterator for PredictorIter<'a> {
-    type Item = Tag;
+    type Item = Tag<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let predicted_tag = self.predictor.predict(&self.current_tag);
@@ -33,7 +33,7 @@ impl Predictor {
     }
 
     pub fn predict(&self, current_tag: &Tag) -> Tag {
-        let current_tag = current_tag.to_string();
+        let current_tag = current_tag.inner().to_string();
 
         match self.strategy {
             Strategy::Evolution => {
@@ -48,7 +48,7 @@ impl Predictor {
         }
     }
 
-    pub fn predict_iter(&self, current_tag: Tag) -> PredictorIter {
+    pub fn predict_iter(&self, current_tag: Tag<'static>) -> PredictorIter {
         PredictorIter {
             predictor: self,
             current_tag,

@@ -63,12 +63,10 @@ impl Account {
         Ok(Account { folders })
     }
 
-    pub fn get_folder_by_name(&self, mailbox: &Mailbox) -> Option<Folder> {
-        let mailbox = String::try_from(mailbox.clone()).unwrap();
-
+    pub fn get_folder_by_name(&self, mailbox: &Mailbox<'_>) -> Option<Folder> {
         self.folders
             .iter()
-            .find(|folder| folder.name == *mailbox)
+            .find(|folder| Mailbox::try_from(folder.name.as_str()).unwrap() == *mailbox)
             .cloned()
     }
 }

@@ -1,16 +1,14 @@
 use std::convert::{TryFrom, TryInto};
 
-use imap_codec::{
+use imap_codec::types::{
     codec::Encode,
-    types::{
-        core::QuotedChar,
-        fetch_attributes::FetchAttribute,
-        flag::Flag,
-        mailbox::{ListMailbox, Mailbox},
-        response::{Code, Data, Status},
-        section::Section,
-        status_attributes::{StatusAttribute, StatusAttributeValue},
-    },
+    core::QuotedChar,
+    fetch_attributes::FetchAttribute,
+    flag::Flag,
+    mailbox::{ListMailbox, Mailbox},
+    response::{Code, Data, Status},
+    section::Section,
+    status_attributes::{StatusAttribute, StatusAttributeValue},
 };
 use tracing::error;
 
@@ -34,8 +32,16 @@ fn canonical_form(
     reference: &Mailbox,
     mailbox: &ListMailbox,
 ) -> Result<Interpretation, std::string::FromUtf8Error> {
-    let reference = String::try_from(reference.clone())?;
-    let mailbox = String::try_from(mailbox.clone())?;
+    let reference = {
+        let mut out = Vec::new();
+        reference.encode(&mut out).unwrap();
+        String::from_utf8(out)?
+    };
+    let mailbox = {
+        let mut out = Vec::new();
+        mailbox.encode(&mut out).unwrap();
+        String::from_utf8(out)?
+    };
 
     if mailbox.is_empty() {
         Ok(Interpretation::HierarchyRequest)
@@ -124,7 +130,7 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
     }).collect::<Vec<String>>().join(" ")
 }
 
-pub async fn ret_select_data(client: &mut ImapServer, folder: &Folder) {
+pub async fn ret_select_data(client: &mut ImapServer<'_>, folder: &Folder) {
     client
         .send(Data::Flags(vec![
             Flag::Answered,
@@ -184,7 +190,11 @@ pub async fn ret_select_data(client: &mut ImapServer, folder: &Folder) {
         .await;
 }
 
-pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox: &ListMailbox) {
+pub async fn ret_list_data(
+    client: &mut ImapServer<'_>,
+    reference: &Mailbox<'_>,
+    mailbox: &ListMailbox<'_>,
+) {
     let qc = QuotedChar::try_from('/').unwrap();
 
     match canonical_form(reference, mailbox) {
@@ -230,7 +240,11 @@ pub async fn ret_list_data(client: &mut ImapServer, reference: &Mailbox, mailbox
     }
 }
 
-pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox: &ListMailbox) {
+pub async fn ret_lsub_data(
+    client: &mut ImapServer<'_>,
+    reference: &Mailbox<'_>,
+    mailbox: &ListMailbox<'_>,
+) {
     let qc = QuotedChar::try_from('/').unwrap();
 
     match canonical_form(reference, mailbox) {
@@ -277,7 +291,7 @@ pub async fn ret_lsub_data(client: &mut ImapServer, reference: &Mailbox, mailbox
 }
 
 pub async fn ret_status_data(
-    client: &mut ImapServer,
+    client: &mut ImapServer<'_>,
     folder: &Folder,
     attributes: &[StatusAttribute],
 ) {

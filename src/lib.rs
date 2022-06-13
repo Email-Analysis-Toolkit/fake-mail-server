@@ -10,7 +10,7 @@ use std::{
 use async_compression::tokio::{bufread::DeflateDecoder, write::DeflateEncoder};
 use async_trait::async_trait;
 use bytes::BytesMut;
-use nom::{Err, IResult, Needed};
+use nom::{error::ErrorKind, Err, IResult, Needed};
 use pin_project::pin_project;
 use serde::{Deserialize, Serialize};
 use tokio::{
@@ -36,6 +36,7 @@ pub mod utils;
 pub enum SplitOffResult<O> {
     Ok((BytesMut, O)),
     Incomplete(Needed),
+    LiteralAck,
     Failure,
 }
 
@@ -53,6 +54,7 @@ where
         }
         Err(e) => match e {
             Err::Incomplete(needed) => SplitOffResult::Incomplete(needed),
+            Err::Failure(error) if error.code == ErrorKind::Fix => SplitOffResult::LiteralAck,
             Err::Error(_) | Err::Failure(_) => SplitOffResult::Failure,
         },
     }
@@ -106,6 +108,8 @@ pub trait Splitter {
                 }
                 SplitOffResult::Incomplete(needed) => {
                     debug!(?needed, "Parsing needs more data");
+                }
+                SplitOffResult::LiteralAck => {
                     self.incomplete().await;
                 }
                 SplitOffResult::Failure => {

@@ -6,20 +6,18 @@ use std::{
 };
 
 use fake_mail_server::{imap::config as ImapConfig, PKCS12};
-use imap_codec::{
+use imap_codec::types::{
     codec::Encode,
+    core::{NonEmptyVec, Tag},
+    response::{Capability, Code, Status},
     state::State,
-    types::{
-        core::{NonEmptyVec, Tag},
-        response::{Capability, Code, Status},
-        AuthMechanism,
-    },
+    AuthMechanism,
 };
 use itertools::Itertools;
 use ron::ser::{to_string_pretty, PrettyConfig};
 
 enum GroupedCaps {
-    Capability(Capability),
+    Capability(Capability<'static>),
     AuthGroup,
 }
 
@@ -87,7 +85,12 @@ fn ok_greeting_caps() {
             match cap {
                 GroupedCaps::Capability(cap) => {
                     cap_str.push_str("_");
-                    cap_str.push_str(cap.to_string().as_str());
+                    let tmp = {
+                        let mut out = Vec::new();
+                        cap.encode(&mut out).unwrap();
+                        String::from_utf8(out).unwrap()
+                    };
+                    cap_str.push_str(&tmp);
                     cap_vec.push(cap);
                 }
                 GroupedCaps::AuthGroup => {
@@ -211,7 +214,12 @@ fn ok_greeting_codes() {
             match cap {
                 GroupedCaps::Capability(cap) => {
                     cap_str.push_str("_");
-                    cap_str.push_str(cap.to_string().as_str());
+                    let tmp = {
+                        let mut out = Vec::new();
+                        cap.encode(&mut out).unwrap();
+                        String::from_utf8(out).unwrap()
+                    };
+                    cap_str.push_str(&tmp);
                     cap_vec.push(cap.clone());
                 }
                 GroupedCaps::AuthGroup => {

@@ -13,9 +13,11 @@ mod test {
 
     use fake_mail_server::utils::escape;
     use imap_codec::{
-        codec::Encode,
+        imap_types::extensions::rfc5161::Utf8Kind,
         types::{
+            codec::Encode,
             core::{IString, NString, Quoted, QuotedChar},
+            extensions::rfc5161::CapabilityEnable,
             fetch_attributes::FetchAttributeValue,
             flag::Flag,
             mailbox::Mailbox,
@@ -75,13 +77,15 @@ mod test {
             Data::fetch(
                 1,
                 vec![FetchAttributeValue::BodyExt {
-                    data: NString(Some(IString::Quoted(
-                        // Good and bad: Can't create invalid Quoted anymore!
-                        // Quoted::try_from(
-                        //     "From: Injected\r\n\r\nInjected\r\n"
-                        // ).unwrap(),
-                        Quoted::try_from("Huch ...").unwrap(),
-                    ))),
+                    data: NString {
+                        inner: Some(IString::Quoted(
+                            // Good and bad: Can't create invalid Quoted anymore!
+                            // Quoted::try_from(
+                            //     "From: Injected\r\n\r\nInjected\r\n"
+                            // ).unwrap(),
+                            Quoted::try_from("Huch ...").unwrap(),
+                        )),
+                    },
                     origin: None,
                     section: None,
                 }],
@@ -89,7 +93,7 @@ mod test {
             .unwrap(),
             // ----- ENABLE Extension (RFC 5161) -----
             Data::Enabled {
-                capabilities: vec![Capability::Idle],
+                capabilities: vec![CapabilityEnable::Utf8(Utf8Kind::Accept)],
             },
         ];
 

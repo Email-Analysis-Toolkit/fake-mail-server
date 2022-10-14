@@ -105,11 +105,11 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                                 if first != 0 {
                                     unimplemented!()
                                 }
-                                let ret = std::cmp::min(mail.body().len() as u32, maximum.get());
-                                format!("BODY[]<{}> {{{}}}\r\n{}", ret, ret, &mail.body()[..ret as usize]) // YOLO! (will panic if on UTF-8 boundary...
+                                let ret = std::cmp::min(mail.data.len() as u32, maximum.get());
+                                format!("BODY[]<{}> {{{}}}\r\n{}", ret, ret, &mail.data[..ret as usize]) // YOLO! (will panic if on UTF-8 boundary...
                             }
                             None => {
-                                format!("BODY[] {{{}}}\r\n{}", mail.body().len(), mail.body())
+                                format!("BODY[] {{{}}}\r\n{}", mail.data.len(), mail.data)
                             }
                         }
                     }

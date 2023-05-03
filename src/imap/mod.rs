@@ -14,7 +14,7 @@ use imap_codec::{
         core::Tag,
         fetch_attributes::{FetchAttribute, MacroOrFetchAttributes},
         mailbox::Mailbox,
-        response::{Capability, Code, Continuation, Data, Status},
+        response::{Capability, Code, Continue, Data, Status},
         sequence::Strategy,
         state::State,
         status_attributes::{StatusAttribute, StatusAttributeValue},
@@ -427,7 +427,7 @@ impl<'a> ImapServer<'a> {
                     }
 
                     CommandBody::Idle => {
-                        self.send(Continuation::basic(None, "idle from auth.").unwrap())
+                        self.send(Continue::basic(None, "idle from auth.").unwrap())
                             .await;
                         self.send(Data::Exists(4)).await;
 
@@ -678,7 +678,7 @@ impl<'a> ImapServer<'a> {
                         .await;
                 }
                 CommandBody::Idle => {
-                    self.send(Continuation::basic(None, "idle from selected.").unwrap())
+                    self.send(Continue::basic(None, "idle from selected.").unwrap())
                         .await;
                     self.send(Data::Exists(4)).await;
 
@@ -716,8 +716,7 @@ impl<'a> ImapServer<'a> {
 
 // TODO: HackyHack ...
 pub fn command(input: &[u8]) -> IResult<&[u8], Command<'static>> {
-    use bounded_static::IntoBoundedStatic;
-    use imap_codec::rfc3501::command::command;
+    use imap_codec::{imap_types::bounded_static::IntoBoundedStatic, rfc3501::command::command};
 
     map(command, |cmd| cmd.into_static())(input)
 }
@@ -796,7 +795,7 @@ impl<'a> Splitter for ImapServer<'a> {
                 debug!(
                     "Found incomplete data, which ends with `}}\\r\\n`. Sending a continuation."
                 );
-                self.send(Continuation::basic(None, "continue, please").unwrap())
+                self.send(Continue::basic(None, "continue, please").unwrap())
                     .await;
             }
         }

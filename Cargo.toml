@@ -30,4 +30,4 @@ tracing-subscriber = { version = "*", features=["json", "env-filter"] }
 
 smtp-codec = { version = "0.2", features = ["serdex"] }
 pop3-codec = { version = "0.3", features = ["serdex"] }
-imap-codec = { git = "https://github.com/duesee/imap-codec", features = ["bounded-static", "starttls", "ext_idle", "ext_compress", "ext_enable", "serde", "nom"], branch = "main" }
+imap-codec = { version = "0.6.0", features = ["bounded-static", "starttls", "ext_idle", "ext_compress", "ext_enable", "serde", "nom"] }

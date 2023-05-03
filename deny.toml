@@ -16,7 +16,7 @@ allow-git = [
 ]
 
 [licenses]
-allow = [ "Apache-2.0", "MIT", "0BSD", "BSD-3-Clause" ]
+allow = [ "Apache-2.0", "MIT", "0BSD", "BSD-3-Clause", "Unicode-DFS-2016" ]
 
 # FIXME, because ...
 unlicensed = "warn"

@@ -3,7 +3,7 @@
 	greeting: Ok(
 		tag: None,
 		code: None,
-		text: Text("IMAP server ready.")
+		text: Text(inner: "IMAP server ready.")
 	),
 
 	hide_commands: ["capability", "starttls"],

@@ -4,7 +4,7 @@
 	greeting: No(
 		tag: None,
 		code: Some(Parse),
-		text: Text("uNiQTghK")
+		text: Text(inner: "uNiQTghK")
 	),
 
 	caps:          [],

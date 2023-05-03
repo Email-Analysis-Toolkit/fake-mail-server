@@ -2,9 +2,9 @@
 	state: NotAuthenticated,
 
 	greeting: Ok(
-		tag: Some(Tag("XYZ")),
+		tag: Some(Tag(inner: "XYZ")),
 		code: None,
-		text: Text("6Iy0xHRr")
+		text: Text(inner: "6Iy0xHRr")
 	),
 
 	caps:          [],

@@ -2,8 +2,8 @@
 	state: NotAuthenticated,
 	greeting: Ok(
 		tag: None,
-		code: Some(Capability(NonEmptyVec([Imap4Rev1, StartTls, LoginDisabled]))),
-		text: Text("IMAP server ready.")
+		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1, StartTls, LoginDisabled]))),
+		text: Text(inner: "IMAP server ready.")
 	),
 
 	response_after_greeting: Some("* OK [REFERRAL imaps://example.org:993] ...\r\n"),

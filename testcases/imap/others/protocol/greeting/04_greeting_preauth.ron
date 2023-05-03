@@ -4,7 +4,7 @@
 	greeting: PreAuth(
 		tag: None,
 		code: None,
-		text: Text("X0n0fCj9")
+		text: Text(inner: "X0n0fCj9")
 	),
 
 	caps:          [],

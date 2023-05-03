@@ -2,8 +2,8 @@
 	state: NotAuthenticated,
 	greeting: Ok(
 		tag: None,
-		code: Some(Capability(NonEmptyVec([Imap4Rev1, StartTls, LoginDisabled]))),
-		text: Text("IMAP server ready.")
+		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1, StartTls, LoginDisabled]))),
+		text: Text(inner: "IMAP server ready.")
 	),
 
 	starttls_response: Some("* STATUS YFlgClUY (MESSAGES 529001 RECENT 529002 UIDNEXT 529003 UNSEEN 529004 UIDVALIDITY 529005)\r\n<tag> OK ready for starttls\r\n"),

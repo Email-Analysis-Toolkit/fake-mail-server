@@ -4,7 +4,7 @@
     greeting: Ok(
         tag: None,
         code: None,
-        text: Text("...")
+        text: Text(inner: "...")
     ),
 
     starttls_response: Some("* OK [ALERT] Attacker-controlled text\r\n<tag> OK ...\r\n"),

@@ -4,7 +4,7 @@
 	greeting: Bad(
 		tag: None,
 		code: None,
-		text: Text("GFkaX18C")
+		text: Text(inner: "GFkaX18C")
 	),
 
 	caps:          [],

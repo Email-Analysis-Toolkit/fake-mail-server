@@ -4,7 +4,7 @@
 	greeting: Ok(
 		tag: None,
 		code: None,
-		text: Text("z7fkPNEe")
+		text: Text(inner: "z7fkPNEe")
 	),
 
 	caps: [Imap4Rev1, StartTls, LoginDisabled],

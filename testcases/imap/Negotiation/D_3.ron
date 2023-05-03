@@ -3,11 +3,11 @@
 	greeting: Ok(
 		tag: None,
 		code: None,
-		text: Text("IMAP server ready.")
+		text: Text(inner: "IMAP server ready.")
 	),
 
 	hide_commands: ["starttls"],
-	caps: [Other(Atom("IMAP4"))],
+	caps: [Other(Atom(inner: "IMAP4"))],
 	caps_tls: [],
 	caps_auth: [],
 	caps_tls_auth: [],

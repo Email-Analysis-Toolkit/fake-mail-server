@@ -4,7 +4,7 @@
 	greeting: No(
 		tag: None,
 		code: None,
-		text: Text("1BsL3pIq")
+		text: Text(inner: "1BsL3pIq")
 	),
 
 	caps:          [],

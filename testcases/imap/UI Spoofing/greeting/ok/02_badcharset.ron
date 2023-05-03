@@ -3,8 +3,8 @@
 
 	greeting: Ok(
 		tag: None,
-		code: Some(BadCharset([Atom(Atom("kkgIhdNV"))])),
-		text: Text("MyF21bpV")
+		code: Some(BadCharset([Atom(Atom(inner: "kkgIhdNV"))])),
+		text: Text(inner: "MyF21bpV")
 	),
 
 	caps:          [],

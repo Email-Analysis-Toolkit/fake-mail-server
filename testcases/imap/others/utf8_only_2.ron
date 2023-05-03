@@ -2,11 +2,11 @@
 	state: NotAuthenticated,
 	greeting: Ok(
 		tag: None,
-		code: Some(Capability(NonEmptyVec([Imap4Rev1, Other(Atom("UTF8=ONLY")), Enable, StartTls]))),
-		text: Text("IMAP server ready.")
+		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1, Other(Atom(inner: "UTF8=ONLY")), Enable, StartTls]))),
+		text: Text(inner: "IMAP server ready.")
 	),
-	caps: [Imap4Rev1, Other(Atom("UTF8=ONLY")), Enable, StartTls],
-	caps_tls: [Imap4Rev1, Other(Atom("UTF8=ONLY")), Enable, StartTls],
+	caps: [Imap4Rev1, Other(Atom(inner: "UTF8=ONLY")), Enable, StartTls],
+	caps_tls: [Imap4Rev1, Other(Atom(inner: "UTF8=ONLY")), Enable, StartTls],
 	caps_auth: [Imap4Rev1],
 	caps_tls_auth: [Imap4Rev1],
 

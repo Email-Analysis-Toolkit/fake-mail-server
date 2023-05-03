@@ -3,7 +3,7 @@
 	greeting: Ok(
 		tag: None,
 		code: None,
-		text: Text("IMAP server ready.")
+		text: Text(inner: "IMAP server ready.")
 	),
 	caps: [Imap4Rev1, StartTls, LoginReferrals],
 	caps_tls: [Imap4Rev1, LoginReferrals],
@@ -11,15 +11,15 @@
 	caps_tls_auth: [],
 
 	//override_login: Some(No(
-	//	tag: Some(Tag("<tag>")),
+	//	tag: Some(Tag(inner: "<tag>")),
 	//	code: Some(Referral("IMAP://;AUTH=*@attacker.example.org:243/")),
-	//	text: Text("try another server.")
+	//	text: Text(inner: "try another server.")
 	//)),
 
 	//override_authenticate: Some(No(
 	//	tag: Some("<tag>"),
 	//	code: Some(Referral("IMAP://;AUTH=*@attacker.example.org:243/")),
-	//	text: Text("try another server.")
+	//	text: Text(inner: "try another server.")
 	//)),
 
 	pkcs12: (

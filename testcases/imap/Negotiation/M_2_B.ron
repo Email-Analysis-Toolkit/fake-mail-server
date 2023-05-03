@@ -2,8 +2,8 @@
 	state: NotAuthenticated,
 	greeting: Ok(
 		tag: None,
-		code: Some(Capability(NonEmptyVec([Imap4Rev1, MailboxReferrals, StartTls]))),
-		text: Text("IMAP server ready.")
+		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1, MailboxReferrals, StartTls]))),
+		text: Text(inner: "IMAP server ready.")
 	),
 	caps: [Imap4Rev1, StartTls, LoginDisabled],
 	caps_tls: [Imap4Rev1, Auth(Plain), Auth(Login)],

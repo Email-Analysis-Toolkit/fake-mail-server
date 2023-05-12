@@ -7,27 +7,27 @@ default-run = "fake_mail_server"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-ansi_term          = "*"
-anyhow             = "*"
-async-compression  = { version = "*", features = ["tokio", "deflate"] }
-async-trait        = "*"
-base64             = "*"
-bounded-static     = "*"
-bytes              = "*"
-itertools          = "*"
-mailparse          = "*"
-nom                = "7"
-pin-project        = "*"
-rand               = "*"
-ron                = "*"
-serde              = "*"
-structopt          = "*"
-tokio-native-tls   = "*"
-tokio              = { version = "*", features=["rt-multi-thread", "io-util", "net", "time", "macros"] }
-tracing            = "*"
-tracing-appender   = "*"
-tracing-subscriber = { version = "*", features=["json", "env-filter"] }
+ansi_term = "*"
+anyhow = "*"
+async-compression = { version = "*", features = ["tokio", "deflate"] }
+async-trait = "*"
+base64 = "*"
+bounded-static = "*"
+bytes = "*"
+itertools = "*"
+mailparse = "*"
+nom = "7"
+pin-project = "*"
+rand = "*"
+ron = "*"
+serde = "*"
+structopt = "*"
+tokio-native-tls = "*"
+tokio = { version = "*", features = ["rt-multi-thread", "io-util", "net", "time", "macros"] }
+tracing = "*"
+tracing-appender = "*"
+tracing-subscriber = { version = "*", features = ["json", "env-filter"] }
 
 smtp-codec = { version = "0.2", features = ["serdex"] }
 pop3-codec = { version = "0.3", features = ["serdex"] }
-imap-codec = { version = "0.6.0", features = ["bounded-static", "starttls", "ext_idle", "ext_compress", "ext_enable", "serde", "nom"] }
+imap-codec = { git = "https://github.com/duesee/imap-codec", rev = "0de65f21f98c0901f48880446d8621330c1d20a6", features = ["bounded-static", "starttls", "ext_idle", "ext_compress", "ext_enable", "ext_sasl_ir", "ext_login_referrals", "ext_mailbox_referrals", "serde"] }

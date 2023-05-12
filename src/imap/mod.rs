@@ -1,27 +1,27 @@
-use std::{
-    borrow::Cow,
-    convert::{TryFrom, TryInto},
-};
+use std::convert::{TryFrom, TryInto};
 
 use async_trait::async_trait;
 use bytes::BytesMut;
 use config::Config;
 use imap_codec::{
-    internal::{rfc2177::idle_done, rfc3501::authenticate_data},
-    types::{
-        codec::Encode,
-        command::{Command, CommandBody, SearchKey::Header},
-        core::Tag,
-        fetch_attributes::{FetchAttribute, MacroOrFetchAttributes},
-        mailbox::Mailbox,
-        response::{Capability, Code, Continue, Data, Status},
-        sequence::Strategy,
-        state::State,
-        status_attributes::{StatusAttribute, StatusAttributeValue},
-        AuthMechanism,
+    codec::{Decode, DecodeError, Encode},
+    command::{
+        fetch::{FetchAttribute, MacroOrFetchAttributes},
+        idle::IdleDone,
+        search::SearchKey,
+        status::StatusAttribute,
+        AuthenticateData, Command, CommandBody, Strategy,
     },
+    imap_types::bounded_static::IntoBoundedStatic,
+    message::{AuthMechanism, Mailbox, Tag},
+    response::{
+        data::{Capability, StatusAttributeValue},
+        Code, Continue, Data, Status,
+    },
+    security::Secret,
+    state::State,
 };
-use nom::{combinator::map, IResult};
+use nom::{IResult, Needed};
 use tracing::{debug, error, info};
 
 use crate::{imap::account::Account, utils::escape, ConsolidatedStream, Splitter, PKCS12};
@@ -82,6 +82,9 @@ impl<'a> ImapServer<'a> {
         }
 
         match self.state.clone() {
+            State::Greeting => {
+                // Unused.
+            }
             State::NotAuthenticated => match command.body {
                 CommandBody::Append { .. } => {
                     self.send(Status::bad(Some(command.tag), None, "Append not allowed.").unwrap())
@@ -141,31 +144,35 @@ impl<'a> ImapServer<'a> {
                     match mechanism {
                         AuthMechanism::Plain => {
                             let credentials = match initial_response {
-                                Some(credentials) => credentials,
+                                Some(credentials) => AuthenticateData(Secret::new(
+                                    credentials.expose_secret().to_vec(),
+                                )),
                                 None => {
                                     // TODO: this is not standard-conform, because `text` is `1*TEXT-CHAR`.
                                     //       Was this changed due to Mutt?
                                     self.send_raw(b"+ \r\n").await;
-                                    Cow::Owned(self.recv(authenticate_data).await.unwrap())
+                                    self.recv(authenticate_data).await.unwrap()
                                 }
                             };
 
                             info!(
-                                credentials=%escape(&credentials),
+                                credentials=%escape(credentials.0.expose_secret()),
                                 "base64-decoded and escaped"
                             );
                         }
                         AuthMechanism::Login => {
                             let username = match initial_response {
-                                Some(username) => username,
+                                Some(username) => {
+                                    AuthenticateData(Secret::new(username.expose_secret().to_vec()))
+                                }
                                 None => {
                                     self.send_raw(b"+ VXNlcm5hbWU6\r\n").await;
-                                    Cow::Owned(self.recv(authenticate_data).await.unwrap())
+                                    self.recv(authenticate_data).await.unwrap()
                                 }
                             };
 
                             info!(
-                                username=%escape(&username),
+                                username=%escape(&username.0.expose_secret()),
                                 "base64-decoded and escaped"
                             );
 
@@ -175,7 +182,7 @@ impl<'a> ImapServer<'a> {
                             };
 
                             info!(
-                                password=%escape(&password),
+                                password=%escape(&password.0.expose_secret()),
                                 "base64-decoded and escaped"
                             );
                         }
@@ -248,7 +255,7 @@ impl<'a> ImapServer<'a> {
                         Status::bad(
                             Some(command.tag),
                             None,
-                            &format!("{} not allowed.", bad_command.name()),
+                            format!("{} not allowed.", bad_command.name()),
                         )
                         .unwrap(),
                     )
@@ -419,7 +426,7 @@ impl<'a> ImapServer<'a> {
 
                     CommandBody::Enable { capabilities } => {
                         self.send(Data::Enabled {
-                            capabilities: capabilities.to_vec(),
+                            capabilities: capabilities.as_ref().to_vec(),
                         })
                         .await;
                         self.send(Status::ok(Some(command.tag), None, "enable done.").unwrap())
@@ -450,7 +457,7 @@ impl<'a> ImapServer<'a> {
                             Status::bad(
                                 Some(command.tag),
                                 None,
-                                &format!("{} not allowed.", bad_command.name()),
+                                format!("{} not allowed.", bad_command.name()),
                             )
                             .unwrap(),
                         )
@@ -572,7 +579,7 @@ impl<'a> ImapServer<'a> {
                 CommandBody::Search { criteria, uid, .. } => {
                     if uid {
                         match criteria {
-                            Header(..) => {
+                            SearchKey::Header(..) => {
                                 self.send(Data::Search(vec![])).await;
                                 self.send(
                                     Status::ok(Some(command.tag), None, "search done.").unwrap(),
@@ -692,7 +699,7 @@ impl<'a> ImapServer<'a> {
                         Status::bad(
                             Some(command.tag),
                             None,
-                            &format!("{} not allowed.", bad_command.name()),
+                            format!("{} not allowed.", bad_command.name()),
                         )
                         .unwrap(),
                     )
@@ -714,11 +721,55 @@ impl<'a> ImapServer<'a> {
     }
 }
 
-// TODO: HackyHack ...
 pub fn command(input: &[u8]) -> IResult<&[u8], Command<'static>> {
-    use imap_codec::{imap_types::bounded_static::IntoBoundedStatic, rfc3501::command::command};
+    match Command::decode(input) {
+        Ok((rem, out)) => Ok((rem, out.into_static())),
+        Err(error) => match error {
+            DecodeError::LiteralAckRequired => Err(nom::Err::Failure(nom::error::Error::new(
+                input,
+                nom::error::ErrorKind::Fix,
+            ))),
+            DecodeError::Incomplete => Err(nom::Err::Incomplete(Needed::Unknown)),
+            DecodeError::Failed => Err(nom::Err::Failure(nom::error::Error::new(
+                input,
+                nom::error::ErrorKind::Fail,
+            ))),
+        },
+    }
+}
 
-    map(command, |cmd| cmd.into_static())(input)
+pub fn authenticate_data(input: &[u8]) -> IResult<&[u8], AuthenticateData> {
+    match AuthenticateData::decode(input) {
+        Ok((rem, out)) => Ok((rem, out.into_static())),
+        Err(error) => match error {
+            DecodeError::LiteralAckRequired => Err(nom::Err::Failure(nom::error::Error::new(
+                input,
+                nom::error::ErrorKind::Fix,
+            ))),
+            DecodeError::Incomplete => Err(nom::Err::Incomplete(Needed::Unknown)),
+            DecodeError::Failed => Err(nom::Err::Failure(nom::error::Error::new(
+                input,
+                nom::error::ErrorKind::Fail,
+            ))),
+        },
+    }
+}
+
+pub fn idle_done(input: &[u8]) -> IResult<&[u8], IdleDone> {
+    match IdleDone::decode(input) {
+        Ok((rem, out)) => Ok((rem, out.into_static())),
+        Err(error) => match error {
+            DecodeError::LiteralAckRequired => Err(nom::Err::Failure(nom::error::Error::new(
+                input,
+                nom::error::ErrorKind::Fix,
+            ))),
+            DecodeError::Incomplete => Err(nom::Err::Incomplete(Needed::Unknown)),
+            DecodeError::Failed => Err(nom::Err::Failure(nom::error::Error::new(
+                input,
+                nom::error::ErrorKind::Fail,
+            ))),
+        },
+    }
 }
 
 #[async_trait]

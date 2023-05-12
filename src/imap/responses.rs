@@ -1,14 +1,13 @@
 use std::convert::{TryFrom, TryInto};
 
-use imap_codec::types::{
+use imap_codec::{
     codec::Encode,
-    core::QuotedChar,
-    fetch_attributes::FetchAttribute,
-    flag::Flag,
-    mailbox::{ListMailbox, Mailbox},
-    response::{Code, Data, Status},
-    section::Section,
-    status_attributes::{StatusAttribute, StatusAttributeValue},
+    command::{fetch::FetchAttribute, status::StatusAttribute, ListMailbox},
+    message::{Flag, FlagPerm, Mailbox, Section},
+    response::{
+        data::{QuotedChar, StatusAttributeValue},
+        Code, Data, Status,
+    },
 };
 use tracing::error;
 
@@ -77,6 +76,7 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                                     Section::HeaderFields(_maybe_part, fields) => format!(
                                         "BODY[HEADER.FIELDS ({})] {{{}}}\r\n{}",
                                         fields
+                                            .as_ref()
                                             .iter()
                                             .map(|s| {
                                                 let mut out = Vec::with_capacity(64);
@@ -157,11 +157,11 @@ pub async fn ret_select_data(client: &mut ImapServer<'_>, folder: &Folder) {
             Status::ok(
                 None,
                 Some(Code::PermanentFlags(vec![
-                    Flag::Answered,
-                    Flag::Flagged,
-                    Flag::Deleted,
-                    Flag::Seen,
-                    Flag::Draft,
+                    FlagPerm::Flag(Flag::Answered),
+                    FlagPerm::Flag(Flag::Flagged),
+                    FlagPerm::Flag(Flag::Deleted),
+                    FlagPerm::Flag(Flag::Seen),
+                    FlagPerm::Flag(Flag::Draft),
                 ])),
                 "flags the client can change permanently.",
             )

@@ -2,7 +2,7 @@
 
 use std::convert::TryFrom;
 
-use imap_codec::types::core::Tag;
+use imap_codec::message::Tag;
 
 struct Predictor {
     strategy: Strategy,

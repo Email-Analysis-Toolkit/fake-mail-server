@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use imap_codec::types::{
-    response::{Capability, Status},
+use imap_codec::{
+    response::{data::Capability, Greeting, Status},
     state::State,
 };
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ use crate::PKCS12;
 pub struct Config<'a> {
     pub state: State<'a>,
     #[serde(default = "default_greeting")]
-    pub greeting: Status<'a>,
+    pub greeting: Greeting<'a>,
     #[serde(default = "default_response_after_greeting")]
     pub response_after_greeting: Option<String>,
     pub caps: Vec<Capability<'a>>,
@@ -47,8 +47,8 @@ pub struct Config<'a> {
     pub implicit_tls: bool,
 }
 
-fn default_greeting() -> Status<'static> {
-    Status::ok(None, None, "Fake IMAP server ready.").unwrap()
+fn default_greeting() -> Greeting<'static> {
+    Greeting::ok(None, "Fake IMAP server ready.").unwrap()
 }
 
 fn default_response_after_greeting() -> Option<String> {

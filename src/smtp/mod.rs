@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use base64::{engine::general_purpose::STANDARD as _base64, Engine};
 use bytes::BytesMut;
 use config::Config;
 use smtp_codec::{
@@ -178,7 +179,7 @@ impl Splitter for SmtpServer {
                         }
                     };
 
-                    if let Ok(username) = base64::decode(username_b64.trim()) {
+                    if let Ok(username) = _base64.decode(username_b64.trim()) {
                         info!(
                             username=%escape(&username),
                             "base64-decoded and escaped",
@@ -192,7 +193,7 @@ impl Splitter for SmtpServer {
                         self.recv(single_line).await.unwrap()
                     };
 
-                    if let Ok(password) = base64::decode(password_b64.trim()) {
+                    if let Ok(password) = _base64.decode(password_b64.trim()) {
                         info!(
                             password=%escape(&password),
                             "base64-decoded and escaped",
@@ -213,7 +214,7 @@ impl Splitter for SmtpServer {
                         }
                     };
 
-                    if let Ok(credentials) = base64::decode(credentials_b64.trim()) {
+                    if let Ok(credentials) = _base64.decode(credentials_b64.trim()) {
                         info!(
                             credentials=%escape(&credentials),
                             "base64-decoded and escaped",

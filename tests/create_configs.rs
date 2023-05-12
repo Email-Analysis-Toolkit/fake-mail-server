@@ -6,12 +6,19 @@ use std::{
 };
 
 use fake_mail_server::{imap::config as ImapConfig, PKCS12};
-use imap_codec::types::{
+use imap_codec::{
     codec::Encode,
-    core::{NonEmptyVec, Tag},
-    response::{Capability, Code, Status},
+    core::NonEmptyVec,
+    message::{AuthMechanism, Tag},
+    response::{data::Capability, Code, Status},
     state::State,
-    AuthMechanism,
+    types::{
+        codec::Encode,
+        core::{NonEmptyVec, Tag},
+        response::{Capability, Code, Status},
+        state::State,
+        AuthMechanism,
+    },
 };
 use itertools::Itertools;
 use ron::ser::{to_string_pretty, PrettyConfig};

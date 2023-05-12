@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-use imap_codec::types::mailbox::Mailbox;
+use imap_codec::message::Mailbox;
 use rand::Rng;
 
 #[derive(Clone, Debug)]

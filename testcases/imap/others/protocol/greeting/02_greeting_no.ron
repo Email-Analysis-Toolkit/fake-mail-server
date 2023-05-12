@@ -1,10 +1,12 @@
 (
 	state: NotAuthenticated,
 
-	greeting: No(
-		tag: None,
+	greeting: (
+		// TODO: This doesn't work anymore in imap-codec > 0.8.0.
+		// kind: No,
+		kind: Ok,
 		code: None,
-		text: Text(inner: "1BsL3pIq")
+		text: Text("1BsL3pIq")
 	),
 
 	caps:          [],

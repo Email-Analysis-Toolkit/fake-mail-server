@@ -1,10 +1,10 @@
 (
 	state: NotAuthenticated,
 
-	greeting: Ok(
-		tag: None,
+	greeting: (
+		kind: Ok,
 		code: None,
-		text: Text(inner: "wE4tXlYX")
+		text: Text("wE4tXlYX")
 	),
 
 	caps:          [],

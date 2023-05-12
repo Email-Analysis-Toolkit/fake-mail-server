@@ -1,10 +1,10 @@
 (
 	state: NotAuthenticated,
 
-	greeting: Ok(
-		tag: None,
+	greeting: (
+		kind: Ok,
 		code: Some(Parse),
-		text: Text(inner: "uNiQTghK")
+		text: Text("uNiQTghK")
 	),
 
 	caps:          [],

@@ -1,9 +1,9 @@
 (
 	state: NotAuthenticated,
-	greeting: Ok(
-		tag: None,
-		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1, Auth(Plain), Auth(Login)]))),
-		text: Text(inner: "IMAP server ready.")
+	greeting: (
+		kind: Ok,
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, Auth(Plain), Auth(Login)]))),
+		text: Text("IMAP server ready.")
 	),
 	caps: [Imap4Rev1, Auth(Plain), Auth(Login)],
 	caps_tls: [Imap4Rev1, Auth(Plain), Auth(Login)],
@@ -19,12 +19,12 @@
 	),
 	implicit_tls: false,
 
-    // Auth(Other(Atom(inner: "PLAIN-CLIENTTOKEN"))),
-    // Auth(Other(Atom(inner: "OAUTHBEARER"))),
-    // Auth(Other(Atom(inner: "XOAUTH"))),
-    // Auth(Other(Atom(inner: "XOAUTH2"))),
-    // Auth(Other(Atom(inner: "KERBEROS_V4"))),
-    // Auth(Other(Atom(inner: "GSSAPI"))),
-    // Auth(Other(Atom(inner: "SKEY"))),
-    // Auth(Other(Atom(inner: "EXTERNAL"))),
+    // Auth(Other(Atom("PLAIN-CLIENTTOKEN"))),
+    // Auth(Other(Atom("OAUTHBEARER"))),
+    // Auth(Other(Atom("XOAUTH"))),
+    // Auth(Other(Atom("XOAUTH2"))),
+    // Auth(Other(Atom("KERBEROS_V4"))),
+    // Auth(Other(Atom("GSSAPI"))),
+    // Auth(Other(Atom("SKEY"))),
+    // Auth(Other(Atom("EXTERNAL"))),
 )

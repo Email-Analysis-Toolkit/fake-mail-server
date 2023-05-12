@@ -1,17 +1,18 @@
 (
-	state: Authenticated,
-	greeting: PreAuth(
-		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1]))),
-		text: Text(inner: "IMAP server ready.")
-	),
-	caps: [Imap4Rev1],
-	caps_tls: [Imap4Rev1],
-	caps_auth: [Imap4Rev1],
-	caps_tls_auth: [Imap4Rev1],
+    state: Authenticated,
+    greeting: (
+        kind: PreAuth,
+        code: Some(Capability(NonEmptyVec([Imap4Rev1]))),
+        text: Text("IMAP server ready.")
+    ),
+    caps: [Imap4Rev1],
+    caps_tls: [Imap4Rev1],
+    caps_auth: [Imap4Rev1],
+    caps_tls_auth: [Imap4Rev1],
 
-	pkcs12: (
-		file: "certs/example.org.p12",
-		password: "changeit",
-	),
-	implicit_tls: false,
+    pkcs12: (
+        file: "certs/example.org.p12",
+        password: "changeit",
+    ),
+    implicit_tls: false,
 )

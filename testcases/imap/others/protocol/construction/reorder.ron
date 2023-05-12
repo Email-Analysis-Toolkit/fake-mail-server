@@ -1,10 +1,10 @@
 (
 	state: NotAuthenticated,
 
-	greeting: Ok(
-		tag: None,
+	greeting: (
+		kind: Ok,
 		code: None,
-		text: Text(inner: "z7fkPNEe")
+		text: Text("z7fkPNEe")
 	),
 
 	caps: [Imap4Rev1, StartTls, LoginDisabled],

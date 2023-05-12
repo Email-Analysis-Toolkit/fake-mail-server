@@ -1,12 +1,12 @@
 (
 	state: NotAuthenticated,
-	greeting: Ok(
-		tag: None,
-		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1, StartTls, LoginDisabled, Other(Atom(inner: "IMAPSIEVE=sieve://example.org"))]))),
-		text: Text(inner: "IMAP server ready.")
+	greeting: (
+		kind: Ok,
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, StartTls, LoginDisabled, Other(CapabilityOther(inner: Atom("IMAPSIEVE=sieve://example.org")))]))),
+		text: Text("IMAP server ready.")
 	),
-	caps: [Imap4Rev1, StartTls, LoginDisabled, Other(Atom(inner: "IMAPSIEVE=sieve://example.org"))],
-	caps_tls: [Imap4Rev1, Auth(Plain), Auth(Login), Other(Atom(inner: "IMAPSIEVE=sieve://example.org"))],
+	caps: [Imap4Rev1, StartTls, LoginDisabled, Other(CapabilityOther(inner: Atom("IMAPSIEVE=sieve://example.org")))],
+	caps_tls: [Imap4Rev1, Auth(Plain), Auth(Login), Other(CapabilityOther(inner: Atom("IMAPSIEVE=sieve://example.org")))],
 	caps_auth: [Imap4Rev1],
 	caps_tls_auth: [Imap4Rev1],
 

@@ -1,9 +1,9 @@
 (
 	state: NotAuthenticated,
-	greeting: Ok(
-		tag: None,
+	greeting: (
+		kind: Ok,
 		code: None,
-		text: Text(inner: "IMAP server ready.")
+		text: Text("IMAP server ready.")
 	),
 
 	hide_commands: ["capability", "starttls"],

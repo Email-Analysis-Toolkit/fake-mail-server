@@ -1,25 +1,25 @@
 (
-	state: NotAuthenticated,
-	greeting: Ok(
-		tag: None,
-		code: None,
-		text: Text(inner: "IMAP server ready.")
-	),
+    state: NotAuthenticated,
+    greeting: (
+        kind: Ok,
+        code: None,
+        text: Text("IMAP server ready.")
+    ),
 
-	hide_commands: ["starttls"],
-	caps: [Other(Atom(inner: "IMAP4"))],
-	caps_tls: [],
-	caps_auth: [],
-	caps_tls_auth: [],
+    hide_commands: ["starttls"],
+    caps: [Other(CapabilityOther(inner: Atom("IMAP4")))],
+    caps_tls: [],
+    caps_auth: [],
+    caps_tls_auth: [],
 
     hook_authenticate: Terminate("Vulnerability, proceeded in plaintext."),
     hook_login: Terminate("Vulnerability, proceeded in plaintext."),
     hook_select: Terminate("Vulnerability, proceeded in plaintext."),
 
-	pkcs12: (
-		file: "certs/example.org.p12",
-		password: "changeit",
-	),
-	implicit_tls: false,
+    pkcs12: (
+        file: "certs/example.org.p12",
+        password: "changeit",
+    ),
+    implicit_tls: false,
 )
 

@@ -1,10 +1,10 @@
 (
 	state: NotAuthenticated,
 
-	greeting: Bye(
-		tag: None,
+	greeting: (
+		kind: Bye,
 		code: None,
-		text: Text(inner: "X0n0fCj9")
+		text: Text("X0n0fCj9")
 	),
 
 	caps:          [],

@@ -1,9 +1,9 @@
 (
 	state: NotAuthenticated,
-	greeting: Ok(
-		tag: None,
-		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1, StartTls, LoginDisabled]))),
-		text: Text(inner: "IMAP server ready.")
+	greeting: (
+		kind: Ok,
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, StartTls, LoginDisabled]))),
+		text: Text("IMAP server ready.")
 	),
 
 	starttls_response: Some("* 1 FETCH (BODY[] {28}\r\nFrom: Injected\r\n\r\nInjected\r\n)\r\n<tag> OK ready for starttls\r\n"),

@@ -1,10 +1,10 @@
 (
     state: NotAuthenticated,
 
-    greeting: Ok(
-        tag: None,
+    greeting: (
+        kind: Ok,
         code: None,
-        text: Text(inner: "...")
+        text: Text("...")
     ),
 
     starttls_response: Some("* OK [ALERT] Attacker-controlled text\r\n<tag> OK ...\r\n"),

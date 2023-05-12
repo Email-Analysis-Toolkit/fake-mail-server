@@ -1,31 +1,31 @@
 (
-	state: NotAuthenticated,
-	greeting: Ok(
-		tag: None,
-		code: None,
-		text: Text(inner: "IMAP server ready.")
-	),
-	caps: [Imap4Rev1, StartTls, LoginReferrals],
-	caps_tls: [Imap4Rev1, LoginReferrals],
-	caps_auth: [],
-	caps_tls_auth: [],
+    state: NotAuthenticated,
+    greeting: (
+        kind: Ok,
+        code: None,
+        text: Text("IMAP server ready.")
+    ),
+    caps: [Imap4Rev1, StartTls, LoginReferrals],
+    caps_tls: [Imap4Rev1, LoginReferrals],
+    caps_auth: [],
+    caps_tls_auth: [],
 
-	//override_login: Some(No(
-	//	tag: Some(Tag(inner: "<tag>")),
-	//	code: Some(Referral("IMAP://;AUTH=*@attacker.example.org:243/")),
-	//	text: Text(inner: "try another server.")
-	//)),
+    //override_login: Some(No(
+    //	tag: Some(Tag(inner: "<tag>")),
+    //	code: Some(Referral("IMAP://;AUTH=*@attacker.example.org:243/")),
+    //	text: Text("try another server.")
+    //)),
 
-	//override_authenticate: Some(No(
-	//	tag: Some("<tag>"),
-	//	code: Some(Referral("IMAP://;AUTH=*@attacker.example.org:243/")),
-	//	text: Text(inner: "try another server.")
-	//)),
+    //override_authenticate: Some(No(
+    //	tag: Some("<tag>"),
+    //	code: Some(Referral("IMAP://;AUTH=*@attacker.example.org:243/")),
+    //	text: Text("try another server.")
+    //)),
 
-	pkcs12: (
-		file: "certs/example.org.p12",
-		password: "changeit",
-	),
-	implicit_tls: false,
+    pkcs12: (
+        file: "certs/example.org.p12",
+        password: "changeit",
+    ),
+    implicit_tls: false,
 )
 

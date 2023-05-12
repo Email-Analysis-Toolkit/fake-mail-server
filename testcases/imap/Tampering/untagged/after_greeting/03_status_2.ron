@@ -1,9 +1,9 @@
 (
 	state: NotAuthenticated,
-	greeting: Ok(
-		tag: None,
-		code: Some(Capability(NonEmptyVec(inner: [Imap4Rev1, StartTls, LoginDisabled]))),
-		text: Text(inner: "IMAP server ready.")
+	greeting: (
+		kind: Ok,
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, StartTls, LoginDisabled]))),
+		text: Text("IMAP server ready.")
 	),
 
 	response_after_greeting: Some("* STATUS INBOX (MESSAGES 718001 RECENT 718002 UIDNEXT 718003 UNSEEN 718004 UIDVALIDITY 718005)\r\n"),

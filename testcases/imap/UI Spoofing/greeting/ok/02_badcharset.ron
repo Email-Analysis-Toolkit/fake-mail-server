@@ -1,10 +1,10 @@
 (
 	state: NotAuthenticated,
 
-	greeting: Ok(
-		tag: None,
-		code: Some(BadCharset([Atom(Atom(inner: "kkgIhdNV"))])),
-		text: Text(inner: "MyF21bpV")
+	greeting: (
+		kind: Ok,
+		code: Some(BadCharset(allowed: [Atom(Atom("kkgIhdNV"))])),
+		text: Text("MyF21bpV")
 	),
 
 	caps:          [],

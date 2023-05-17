@@ -10,15 +10,8 @@ use imap_codec::{
     codec::Encode,
     core::NonEmptyVec,
     message::{AuthMechanism, Tag},
-    response::{data::Capability, Code, Status},
+    response::{data::Capability, Code, Greeting, Status},
     state::State,
-    types::{
-        codec::Encode,
-        core::{NonEmptyVec, Tag},
-        response::{Capability, Code, Status},
-        state::State,
-        AuthMechanism,
-    },
 };
 use itertools::Itertools;
 use ron::ser::{to_string_pretty, PrettyConfig};
@@ -107,7 +100,7 @@ fn ok_greeting_caps() {
                 }
             }
         }
-        let greeting = Status::ok(None, None, "Fake IMAP server ready").unwrap();
+        let greeting = Greeting::ok(None, "Fake IMAP server ready").unwrap();
         let mut overrides = HashMap::new();
         overrides.insert("create".to_string(), "<tag> OK created\r\n".to_string());
 
@@ -152,21 +145,16 @@ fn ok_greeting_caps() {
 }
 
 fn greetings() {
-    let mut greetings: HashMap<&str, Status> = HashMap::new();
-    greetings.insert(
-        "ok",
-        Status::ok(None, None, "Fake IMAP server ready").unwrap(),
-    );
-    greetings.insert("bad", Status::bad(None, None, "This is bad").unwrap());
-    greetings.insert(
-        "no",
-        Status::no(None, None, "Fake IMAP server not ready").unwrap(),
-    );
+    let mut greetings: HashMap<&str, Greeting> = HashMap::new();
+    greetings.insert("ok", Greeting::ok(None, "Fake IMAP server ready").unwrap());
     greetings.insert(
         "preauth",
-        Status::preauth(None, "Welcome pre-authed user").unwrap(),
+        Greeting::preauth(None, "Welcome pre-authed user").unwrap(),
     );
-    greetings.insert("bye", Status::bye(None, "Please leave").unwrap());
+    greetings.insert("bye", Greeting::bye(None, "Please leave").unwrap());
+    // TODO: Not allowed anymore in imap-codec.
+    // greetings.insert("no", Greeting::no(None, "Fake IMAP server not ready").unwrap());
+    // greetings.insert("bad", Greeting::bad(None, "This is bad").unwrap());
     for (name, greeting) in greetings {
         let config = ImapConfig::Config {
             state: State::NotAuthenticated,
@@ -246,7 +234,7 @@ fn ok_greeting_codes() {
         Code::capability(vec![Capability::Imap4Rev1, Capability::StartTls]).unwrap(),
     );
     for (name, code) in codes {
-        let greeting = Status::ok(None, Some(code), "Fake Mail server ready").unwrap();
+        let greeting = Greeting::ok(Some(code), "Fake Mail server ready").unwrap();
         let mut overrides = HashMap::new();
         overrides.insert("create".to_string(), "<tag> OK created\r\n".to_string());
         overrides.insert(
@@ -297,7 +285,7 @@ fn starttls() {
         overrides.insert("starttls".to_string(), response);
         let config = ImapConfig::Config {
             state: State::NotAuthenticated,
-            greeting: Status::ok(None, None, "Fake mail server ready!").unwrap(),
+            greeting: Greeting::ok(None, "Fake mail server ready!").unwrap(),
             response_after_greeting: None,
             caps: vec![
                 Capability::Imap4Rev1,

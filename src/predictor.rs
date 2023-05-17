@@ -60,7 +60,7 @@ impl Predictor {
 mod test {
     use std::convert::TryFrom;
 
-    use imap_codec::types::core::Tag;
+    use imap_codec::message::Tag;
 
     use super::{Predictor, Strategy};
 

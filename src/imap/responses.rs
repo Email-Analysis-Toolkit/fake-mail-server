@@ -3,9 +3,10 @@ use std::convert::{TryFrom, TryInto};
 use imap_codec::{
     codec::Encode,
     command::{fetch::FetchAttribute, status::StatusAttribute, ListMailbox},
+    core::NString,
     message::{Flag, FlagPerm, Mailbox, Section},
     response::{
-        data::{QuotedChar, StatusAttributeValue},
+        data::{Envelope, QuotedChar, StatusAttributeValue},
         Code, Data, Status,
     },
 };
@@ -118,7 +119,18 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
 
             FetchAttribute::BodyStructure => format!("BODYSTRUCTURE (\"TEXT\" \"PLAIN\" (\"CHARSET\" \"US-ASCII\") NIL NIL \"7BIT\" {} {})", mail.body().len(), mail.body().lines().count()),
 
-            FetchAttribute::Envelope => "ENVELOPE \"\"".to_string(), // FIXME
+            FetchAttribute::Envelope => format!("ENVELOPE {}", String::from_utf8(Envelope {
+                date: NString(None),
+                subject: NString(None),
+                from: vec![],
+                sender: vec![],
+                reply_to: vec![],
+                to: vec![],
+                cc: vec![],
+                bcc: vec![],
+                in_reply_to: NString(None),
+                message_id: NString(None),
+            }.encode_detached().unwrap()).unwrap()),
             FetchAttribute::Flags => format!("FLAGS {}", "(\\Recent)"),
             FetchAttribute::InternalDate => format!("INTERNALDATE \"{}\"", "01-Oct-2019 12:34:56 +0000"),
             FetchAttribute::Rfc822 => unimplemented!(),

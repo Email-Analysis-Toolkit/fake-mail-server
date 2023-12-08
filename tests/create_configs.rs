@@ -135,6 +135,7 @@ fn ok_greeting_caps() {
                 password: "changeit".to_string(),
             },
             implicit_tls: false,
+            recv_timeout: None,
         };
         let path = format!(
             "generated_tests/imap/capability/greeting_ok_capability_{}.ron",
@@ -186,6 +187,7 @@ fn greetings() {
                 password: "changeit".to_string(),
             },
             implicit_tls: false,
+            recv_timeout: None,
         };
         let path = format!("generated_tests/imap/greeting/{}.ron", name);
         write_config(config, path);
@@ -272,6 +274,7 @@ fn ok_greeting_codes() {
                 password: "changeit".to_string(),
             },
             implicit_tls: false,
+            recv_timeout: None,
         };
         let path = format!("generated_tests/imap/greeting/ok_{}.ron", name);
         write_config(config, path);
@@ -313,6 +316,7 @@ fn starttls() {
                 password: "changeit".to_string(),
             },
             implicit_tls: false,
+            recv_timeout: None,
         };
         let path = format!("generated_tests/imap/starttls/{}.ron", name);
         write_config(config, path);

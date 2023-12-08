@@ -45,6 +45,7 @@ pub struct Config<'a> {
     pub override_response: HashMap<String, String>,
     pub pkcs12: PKCS12,
     pub implicit_tls: bool,
+    pub recv_timeout: Option<u64>,
 }
 
 fn default_greeting() -> Greeting<'static> {

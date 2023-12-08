@@ -1,4 +1,7 @@
-use std::convert::{TryFrom, TryInto};
+use std::{
+    convert::{TryFrom, TryInto},
+    time::Duration,
+};
 
 use async_trait::async_trait;
 use bytes::BytesMut;
@@ -838,6 +841,11 @@ impl<'a> Splitter for ImapServer<'a> {
 
     fn pkcs12(&self) -> PKCS12 {
         self.config.pkcs12.clone()
+    }
+
+    fn recv_timeout(&self) -> Duration {
+        let t = self.config.recv_timeout.unwrap_or(0);
+        Duration::from_secs(t)
     }
 
     async fn incomplete(&mut self) {

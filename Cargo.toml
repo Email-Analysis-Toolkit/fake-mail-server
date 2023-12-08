@@ -11,7 +11,7 @@ ansi_term = "*"
 anyhow = "*"
 async-compression = { version = "*", features = ["tokio", "deflate"] }
 async-trait = "*"
-base64 = "*"
+base64 = "0.21.5"
 bounded-static = "*"
 bytes = "*"
 futures = "*"

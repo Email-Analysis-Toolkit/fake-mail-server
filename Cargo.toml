@@ -28,8 +28,8 @@ structopt = "*"
 tokio-native-tls = "*"
 tokio = { version = "*", features = ["rt-multi-thread", "io-util", "net", "time", "macros"] }
 tracing = "*"
-tracing-appender = "*"
-tracing-subscriber = { version = "*", features = ["fmt", "json", "env-filter"] }
+tracing-appender = "0.2.2"
+tracing-subscriber = { version = "0.3.17", features = ["fmt", "json", "env-filter"] }
 zmq = "*"
 
 smtp-codec = { version = "0.2", features = ["serdex"] }

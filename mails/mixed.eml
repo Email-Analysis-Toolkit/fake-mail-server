@@ -1,0 +1,14 @@
+From: Alice
+To: Bob
+Subject: Mixed Example
+Content-Type: multipart/mixed; boundary=mixed
+
+--mixed
+Content-Type: text/plain
+
+Plain text body.
+--mixed
+Content-Type: text/html
+
+<b>Fancy HTML Body.</b>
+--mixed--

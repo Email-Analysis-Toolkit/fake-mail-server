@@ -1,5 +1,6 @@
 From: Alice
 To: Bob
-Subject: Hello!
+Subject: Example 1
+Content-Type: text/plain
 
 Body

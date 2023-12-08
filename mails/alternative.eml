@@ -1,0 +1,14 @@
+From: Alice
+To: Bob
+Subject: Alternative Example
+Content-Type: multipart/alternative; boundary=alternative
+
+--alternative
+Content-Type: text/plain
+
+Plain text body.
+--alternative
+Content-Type: text/html
+
+<b>Fancy HTML Body.</b>
+--alternative--

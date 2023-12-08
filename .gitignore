@@ -3,6 +3,9 @@
 # Fake Mail Server
 logs
 generated_tests
+mails.bak
 
 # Development
 .idea
+tags
+.DS_STORE

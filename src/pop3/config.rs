@@ -23,6 +23,7 @@ pub struct Config {
     pub pkcs12: PKCS12,
     #[serde(default = "default_override_response")]
     pub override_response: HashMap<String, String>,
+    pub recv_timeout: Option<u64>,
 }
 
 fn default_stls_response() -> String {

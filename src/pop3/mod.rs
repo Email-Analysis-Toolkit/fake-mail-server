@@ -1,4 +1,4 @@
-use std::str::from_utf8;
+use std::{str::from_utf8, time::Duration};
 
 use async_trait::async_trait;
 use base64::{engine::general_purpose::STANDARD as _base64, Engine};
@@ -355,5 +355,10 @@ impl Splitter for Pop3Server {
 
     fn pkcs12(&self) -> PKCS12 {
         self.config.pkcs12.clone()
+    }
+
+    fn recv_timeout(&self) -> Duration {
+        let t = self.config.recv_timeout.unwrap_or(0);
+        Duration::from_secs(t)
     }
 }

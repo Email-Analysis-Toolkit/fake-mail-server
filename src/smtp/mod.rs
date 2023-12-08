@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use async_trait::async_trait;
 use base64::{engine::general_purpose::STANDARD as _base64, Engine};
 use bytes::BytesMut;
@@ -239,5 +241,10 @@ impl Splitter for SmtpServer {
 
     fn pkcs12(&self) -> PKCS12 {
         self.config.pkcs12.clone()
+    }
+
+    fn recv_timeout(&self) -> Duration {
+        let t = self.config.recv_timeout.unwrap_or(0);
+        Duration::from_secs(t)
     }
 }

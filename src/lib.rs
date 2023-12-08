@@ -184,6 +184,10 @@ pub trait Splitter {
         self.stream().accept_compression().await;
     }
 
+    fn recv_timeout(&self) -> Duration {
+        Duration::from_secs(1)
+    }
+
     fn buffer(&mut self) -> &mut BytesMut;
 
     fn stream(&mut self) -> &mut ConsolidatedStream;

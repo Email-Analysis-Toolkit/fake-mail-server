@@ -14,11 +14,14 @@ async-trait = "*"
 base64 = "*"
 bounded-static = "*"
 bytes = "*"
+futures = "*"
 itertools = "*"
+lazy_static = "*"
 mailparse = "*"
 nom = "7"
 pin-project = "*"
 rand = "*"
+regex = "*"
 ron = "*"
 serde = "*"
 structopt = "*"
@@ -26,7 +29,8 @@ tokio-native-tls = "*"
 tokio = { version = "*", features = ["rt-multi-thread", "io-util", "net", "time", "macros"] }
 tracing = "*"
 tracing-appender = "*"
-tracing-subscriber = { version = "*", features = ["json", "env-filter"] }
+tracing-subscriber = { version = "*", features = ["fmt", "json", "env-filter"] }
+zmq = "*"
 
 smtp-codec = { version = "0.2", features = ["serdex"] }
 pop3-codec = { version = "0.3", features = ["serdex"] }

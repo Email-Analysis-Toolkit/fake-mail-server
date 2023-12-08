@@ -60,12 +60,14 @@ where
     }
 }
 
+static TIMEOUT: u64 = 1000000;
+
 #[async_trait]
 pub trait Splitter {
     async fn run(self);
 
     async fn send_raw(&mut self, data: &[u8]) -> bool {
-        match timeout(Duration::from_secs(1), self.stream().write_all(data)).await {
+        match timeout(Duration::from_secs(TIMEOUT), self.stream().write_all(data)).await {
             Ok(result) => {
                 if let Err(error) = result {
                     error!(?error, "send error");
@@ -127,7 +129,11 @@ pub trait Splitter {
             }
 
             // FIXME: Make timeout configurable
-            let res = timeout(Duration::from_secs(5), self.stream().read(&mut read_buffer)).await;
+            let res = timeout(
+                Duration::from_secs(TIMEOUT),
+                self.stream().read(&mut read_buffer),
+            )
+            .await;
 
             let res = match res {
                 Ok(res) => res,

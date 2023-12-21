@@ -13,7 +13,7 @@ class MailGenerator(object):
     def __init__(self, org, key_file=None):
         self.org = org
         if key_file is not None:
-            import smime
+            import smime_lib as smime
             self.priv_key = smime.load_key_from_pem(key_file)
             self.n = self.priv_key.private_numbers().public_numbers.n
             self.enc = self.priv_key.private_numbers().public_numbers.e

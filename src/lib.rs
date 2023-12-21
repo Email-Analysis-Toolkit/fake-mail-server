@@ -398,11 +398,13 @@ impl ConsolidatedStream {
                 .unwrap_or_else(|_| panic!("Could not open Cert file \"{}\".", pem_path));
             let key_file = std::fs::read(key_path)
                 .unwrap_or_else(|_| panic!("Could not open Key file \"{}\".", key_path));
-            tokio_native_tls::native_tls::Identity::from_pkcs8(&crt_file, &key_file).expect(
-                &format!(
-                    "Could not read cert ({}) or key ({}) file.",
-                    pem_path, key_path
-                ),
+            tokio_native_tls::native_tls::Identity::from_pkcs8(&crt_file, &key_file).unwrap_or_else(
+                |_| {
+                    panic!(
+                        "Could not read cert ({}) or key ({}) file.",
+                        pem_path, key_path
+                    )
+                },
             )
         };
 

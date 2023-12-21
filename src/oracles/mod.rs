@@ -68,7 +68,7 @@ pub fn idle() -> String {
     let ctx = zmq::Context::new();
     let socket = ctx.socket(zmq::REQ).unwrap();
     socket.connect("ipc:///tmp/oracle.ipc").unwrap();
-    let data = format!("idle").as_str().as_bytes().to_owned();
+    let data = "idle".as_bytes().to_owned();
     socket.send(data, 0).unwrap();
     socket.recv_msg(0).unwrap().as_str().unwrap().to_string()
 }
@@ -77,7 +77,7 @@ pub fn search() -> String {
     let ctx = zmq::Context::new();
     let socket = ctx.socket(zmq::REQ).unwrap();
     socket.connect("ipc:///tmp/oracle.ipc").unwrap();
-    let data = format!("search").as_str().as_bytes().to_owned();
+    let data = "search".as_bytes().to_owned();
     socket.send(data, 0).unwrap();
     socket.recv_msg(0).unwrap().as_str().unwrap().to_string()
 }

@@ -144,7 +144,7 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
     fetch_attrs
         .iter()
         .map(|fetch_attr| {
-            let parsed_mail = parse_mail(&mail.data.as_bytes()).unwrap();
+            let parsed_mail = parse_mail(mail.data.as_bytes()).unwrap();
             match fetch_attr {
                 FetchAttribute::Body => unimplemented!(),
 
@@ -161,7 +161,7 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                                 Section::Part(_part) => {
                                     let mut part_str = String::new();
                                     for subpart in _part.0.as_ref() {
-                                        if part_str.len() > 0 {
+                                        if !part_str.is_empty() {
                                             part_str.push('.')
                                         }
                                         part_str.push_str(&format!("{}", subpart));
@@ -209,18 +209,17 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                                         found_header_fields
                                             .push_str(key.to_ascii_uppercase().as_str());
                                         found_header_fields.push(' ');
-                                        match parsed_mail.headers.get_first_header(key.as_str()) {
-                                            Some(header) => {
-                                                header_vals.push_str(
-                                                    format!(
-                                                        "{}: {}\r\n",
-                                                        header.get_key(),
-                                                        header.get_value()
-                                                    )
-                                                    .as_str(),
-                                                );
-                                            }
-                                            None => {}
+                                        if let Some(header) =
+                                            parsed_mail.headers.get_first_header(key.as_str())
+                                        {
+                                            header_vals.push_str(
+                                                format!(
+                                                    "{}: {}\r\n",
+                                                    header.get_key(),
+                                                    header.get_value()
+                                                )
+                                                .as_str(),
+                                            );
                                         }
                                     }
                                     found_header_fields.pop();
@@ -241,28 +240,25 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                                         if first != 0 {
                                             unimplemented!()
                                         }
-                                        let data;
-                                        match part.len() {
-                                            0 => data = (&mail.data).to_string(),
+                                        let data = match part.len() {
+                                            0 => (mail.data).to_string(),
                                             _ => {
                                                 let mut current_part = &parsed_mail;
-                                                for part_str in part.split(".") {
-                                                    let part_num: usize =
-                                                        part_str.parse().unwrap_or(1);
-                                                    match current_part.subparts.len() {
-                                                        0 => {}
-                                                        _ => {
-                                                            current_part =
-                                                                &current_part.subparts[part_num - 1]
-                                                        }
+                                                let part_str =
+                                                    part.split('.').next().unwrap_or("1");
+                                                let part_num: usize = part_str.parse().unwrap_or(1);
+                                                match current_part.subparts.len() {
+                                                    0 => {}
+                                                    _ => {
+                                                        current_part =
+                                                            &current_part.subparts[part_num - 1]
                                                     }
-                                                    break;
                                                 }
-                                                data = match current_part.get_body_encoded() {
-                                                    Body::Base64(body) => String::from_utf8(
-                                                        body.get_raw().iter().cloned().collect(),
-                                                    )
-                                                    .unwrap(),
+                                                match current_part.get_body_encoded() {
+                                                    Body::Base64(body) => {
+                                                        String::from_utf8(body.get_raw().to_vec())
+                                                            .unwrap()
+                                                    }
                                                     _ => current_part.get_body().unwrap(),
                                                 }
                                             }
@@ -282,30 +278,26 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                                             Section::Part(_part) => {
                                                 match part.len() {
                                                     0 => {
-                                                        data = (&mail.data).to_string();
+                                                        data = (mail.data).to_string();
                                                     }
                                                     _ => {
                                                         let mut current_part = &parsed_mail;
-                                                        for part_str in part.split(".") {
-                                                            let part_num: usize =
-                                                                part_str.parse().unwrap_or(1);
-                                                            match current_part.subparts.len() {
-                                                                0 => {}
-                                                                _ => {
-                                                                    current_part = &current_part
-                                                                        .subparts[part_num - 1]
-                                                                }
+                                                        let part_str =
+                                                            part.split('.').next().unwrap_or("1");
+                                                        let part_num: usize =
+                                                            part_str.parse().unwrap_or(1);
+                                                        match current_part.subparts.len() {
+                                                            0 => {}
+                                                            _ => {
+                                                                current_part = &current_part
+                                                                    .subparts[part_num - 1]
                                                             }
-                                                            break;
                                                         }
                                                         data = match current_part.get_body_encoded()
                                                         {
                                                             Body::Base64(body) => {
                                                                 String::from_utf8(
-                                                                    body.get_raw()
-                                                                        .iter()
-                                                                        .cloned()
-                                                                        .collect(),
+                                                                    body.get_raw().to_vec(),
                                                                 )
                                                                 .unwrap()
                                                             }
@@ -356,7 +348,9 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                                             Section::Mime(section_part) => {
                                                 let mut section_str = String::new();
                                                 let mut current_part = &parsed_mail;
-                                                for part in section_part.0.as_ref() {
+                                                if let Some(part) =
+                                                    section_part.0.as_ref().iter().next()
+                                                {
                                                     section_str.push_str(&part.to_string());
                                                     match current_part.subparts.len() {
                                                         0 => {}
@@ -367,7 +361,6 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                                                                     - 1]
                                                         }
                                                     }
-                                                    break;
                                                 }
                                                 let part_headers = String::from_utf8(
                                                     current_part
@@ -431,7 +424,7 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                         let addr_val = from_addr.get_value();
                         match re.captures(&addr_val) {
                             Some(caps) => {
-                                name = caps.get(1).map_or("No Name", |m| m.as_str().into());
+                                name = caps.get(1).map_or("No Name", |m| m.as_str());
                                 match caps.get(2) {
                                     Some(addr) => {
                                         let re = Regex::new("<(.*)@(.*>)").unwrap();
@@ -470,7 +463,7 @@ pub fn attr_to_data(mail: &Mail, fetch_attrs: &[FetchAttribute]) -> String {
                     let envelope = Envelope {
                         date: NString(Some("01-Oct-2021 12:34:56 +0000".try_into().unwrap())),
                         subject: NString(Some(subject.try_into().unwrap())),
-                        from: from,
+                        from,
                         sender: vec![],
                         reply_to: vec![],
                         to: vec![],
@@ -527,7 +520,7 @@ pub fn attr_to_data_oracles(uid: u32, fetch_attrs: &[FetchAttribute]) -> String 
                                 Section::Part(_part) => {
                                     let mut part_str = String::new();
                                     for subpart in _part.0.as_ref() {
-                                        if part_str.len() > 0 {
+                                        if !part_str.is_empty() {
                                             part_str.push('.')
                                         }
                                         part_str.push_str(&format!("{}", subpart));
@@ -564,18 +557,17 @@ pub fn attr_to_data_oracles(uid: u32, fetch_attrs: &[FetchAttribute]) -> String 
                                         found_header_fields
                                             .push_str(key.to_ascii_uppercase().as_str());
                                         found_header_fields.push(' ');
-                                        match parsed_mail.headers.get_first_header(key.as_str()) {
-                                            Some(header) => {
-                                                header_vals.push_str(
-                                                    format!(
-                                                        "{}: {}\r\n",
-                                                        header.get_key(),
-                                                        header.get_value()
-                                                    )
-                                                    .as_str(),
-                                                );
-                                            }
-                                            None => {}
+                                        if let Some(header) =
+                                            parsed_mail.headers.get_first_header(key.as_str())
+                                        {
+                                            header_vals.push_str(
+                                                format!(
+                                                    "{}: {}\r\n",
+                                                    header.get_key(),
+                                                    header.get_value()
+                                                )
+                                                .as_str(),
+                                            );
                                         }
                                     }
                                     found_header_fields.pop();
@@ -596,12 +588,9 @@ pub fn attr_to_data_oracles(uid: u32, fetch_attrs: &[FetchAttribute]) -> String 
                                         if first != 0 {
                                             unimplemented!()
                                         }
-                                        let data;
-                                        match part.len() {
-                                            0 => data = oracles::get_body(uid),
-                                            _ => {
-                                                data = oracles::get_part(uid, &part);
-                                            }
+                                        let data = match part.len() {
+                                            0 => oracles::get_body(uid),
+                                            _ => oracles::get_part(uid, &part),
                                         };
                                         let ret = std::cmp::min(data.len() as u32, maximum.into());
                                         format!(
@@ -715,7 +704,7 @@ pub fn attr_to_data_oracles(uid: u32, fetch_attrs: &[FetchAttribute]) -> String 
                         let addr_val = from_addr.get_value();
                         match re.captures(addr_val.as_str()) {
                             Some(caps) => {
-                                name = caps.get(1).map_or("No Name", |m| m.as_str().into());
+                                name = caps.get(1).map_or("No Name", |m| m.as_str());
                                 match caps.get(2) {
                                     Some(addr) => {
                                         let re = Regex::new("<(.*)@(.*>)").unwrap();
@@ -753,7 +742,7 @@ pub fn attr_to_data_oracles(uid: u32, fetch_attrs: &[FetchAttribute]) -> String 
                     let envelope = Envelope {
                         date: NString(Some("01-Oct-2021 12:34:56 +0000".try_into().unwrap())),
                         subject: NString(Some(subject.try_into().unwrap())),
-                        from: from,
+                        from,
                         sender: vec![],
                         reply_to: vec![],
                         to: vec![],
@@ -1008,21 +997,19 @@ pub fn build_bodystructure(mail_part: ParsedMail) -> String {
         .to_ascii_lowercase()
         .starts_with("multipart/")
     {
-        let subtype = mail_part.ctype.mimetype.split("/").nth(1).unwrap();
+        let subtype = mail_part.ctype.mimetype.split('/').nth(1).unwrap();
         for part in mail_part.subparts {
             sub_parts.push_str(build_bodystructure(part).as_str());
         }
         format!("({} \"{}\" {} NIL NIL NIL)", sub_parts, subtype, attributes)
     } else {
         let data = match mail_part.get_body_encoded() {
-            Body::Base64(body) => {
-                String::from_utf8(body.get_raw().iter().cloned().collect()).unwrap()
-            }
+            Body::Base64(body) => String::from_utf8(body.get_raw().to_vec()).unwrap(),
             _ => mail_part.get_body().unwrap(),
         };
         let line_count = "NIL"; //data.lines().count();
         let data_len = data.len();
-        let mut comp_type = mail_part.ctype.mimetype.split("/");
+        let mut comp_type = mail_part.ctype.mimetype.split('/');
         let (mimetype, subtype) = (comp_type.next().unwrap(), comp_type.next().unwrap());
         let encoding = match mail_part
             .headers
@@ -1063,9 +1050,7 @@ pub fn get_full_body(parsed_mail: ParsedMail, nested: bool, boundary: &str) -> S
         data
     } else {
         let body = match parsed_mail.get_body_encoded() {
-            Body::Base64(body) => {
-                String::from_utf8(body.get_raw().iter().cloned().collect()).unwrap()
-            }
+            Body::Base64(body) => String::from_utf8(body.get_raw().to_vec()).unwrap(),
             _ => parsed_mail.get_body().unwrap(),
         };
         data.push_str(body.as_str());

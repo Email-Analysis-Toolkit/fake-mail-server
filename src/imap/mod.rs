@@ -186,7 +186,7 @@ impl<'a> ImapServer<'a> {
                             };
 
                             info!(
-                                username=%escape(&username.0.expose_secret()),
+                                username=%escape(username.0.expose_secret()),
                                 "base64-decoded and escaped"
                             );
 
@@ -196,7 +196,7 @@ impl<'a> ImapServer<'a> {
                             };
 
                             info!(
-                                password=%escape(&password.0.expose_secret()),
+                                password=%escape(password.0.expose_secret()),
                                 "base64-decoded and escaped"
                             );
                         }
@@ -666,7 +666,7 @@ impl<'a> ImapServer<'a> {
                                         Some(selected) => {
                                             let mut uids = vec![];
                                             for mail in selected.mails {
-                                                uids.push(mail.uid.try_into().unwrap());
+                                                uids.push(mail.uid);
                                             }
                                             self.send(Data::Search(uids)).await;
                                         }
@@ -826,10 +826,8 @@ impl<'a> ImapServer<'a> {
                 sleep(Duration::from_secs(1)).await;
 
                 self.recv(idle_done).await.unwrap();
-                self.send(
-                    Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.").unwrap(),
-                )
-                .await;
+                self.send(Status::ok(Some(tag), None, "idle done.").unwrap())
+                    .await;
 
                 self.state = State::Authenticated;
             }
@@ -842,11 +840,8 @@ impl<'a> ImapServer<'a> {
                     match self.recv_nonblocking(idle_done).await {
                         Err(_) => {}
                         Ok(_) => {
-                            self.send(
-                                Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.")
-                                    .unwrap(),
-                            )
-                            .await;
+                            self.send(Status::ok(Some(tag), None, "idle done.").unwrap())
+                                .await;
 
                             self.state = State::Selected(folder);
                             break;
@@ -857,17 +852,15 @@ impl<'a> ImapServer<'a> {
                     self.config.recv_timeout = Some(0);
                     self.recv(idle_done).await.unwrap();
                     self.config.recv_timeout = Some(current_timeout.as_secs());
-                    self.send(
-                        Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.").unwrap(),
-                    )
-                    .await;
+                    self.send(Status::ok(Some(tag), None, "idle done.").unwrap())
+                        .await;
                     self.state = State::Selected(folder);
                     break;
                 }
             },
             _ => {}
         }
-        return true;
+        true
     }
 }
 

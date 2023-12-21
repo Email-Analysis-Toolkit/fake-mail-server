@@ -1,18 +1,17 @@
 use std::{io, path::PathBuf, process::Command};
 
 use anyhow::Context;
+use clap::{value_parser, Parser};
 use fake_mail_server::{
     error::StringError,
     filter::Filter,
     imap::{account::Account, config::Config as ImapConfig, ImapServer},
     log::TraceLayer,
-    parse_protocol,
     pop3::{config::Config as Pop3Config, Pop3Server},
     smtp::{config::Config as SmtpConfig, SmtpServer},
     utils::sample_sid,
     ConsolidatedStream, Protocol, Splitter,
 };
-use structopt::StructOpt;
 use tokio::net::{TcpListener, TcpStream};
 use tracing::{error, info, info_span, Instrument};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, FmtSubscriber};
@@ -27,7 +26,11 @@ async fn spawn_benign_smtp(main_config: Config) -> anyhow::Result<()> {
         .context(format!("Failed to bind to {}", &main_config.smtp))?;
 
     let test_config: SmtpConfig = {
-        let path = "testcases/smtp/setup.ron";
+        let path = if main_config.setup_opportunistic_encryption {
+            "testcases/smtp/setup_opportunistic_encryption.ron"
+        } else {
+            "testcases/smtp/setup.ron"
+        };
         read_ron_config(path).context(format!("Could not load SMTP config at path \"{}\"", path))?
     };
 
@@ -56,7 +59,11 @@ async fn spawn_benign_pop3(main_config: Config) -> anyhow::Result<()> {
         .context(format!("Failed to bind to {}", &main_config.pop3))?;
 
     let test_config: Pop3Config = {
-        let path = "testcases/pop3/setup.ron";
+        let path = if main_config.setup_opportunistic_encryption {
+            "testcases/pop3/setup_opportunistic_encryption.ron"
+        } else {
+            "testcases/pop3/setup.ron"
+        };
         read_ron_config(path).context(format!("Could not load POP3 config at path \"{}\"", path))?
     };
 
@@ -85,7 +92,11 @@ async fn spawn_benign_imap(main_config: Config) -> anyhow::Result<()> {
         .context(format!("Failed to bind to {}", &main_config.imap))?;
 
     let test_config: ImapConfig = {
-        let path = "testcases/imap/setup.ron";
+        let path = if main_config.setup_opportunistic_encryption {
+            "testcases/imap/setup_opportunistic_encryption.ron"
+        } else {
+            "testcases/imap/setup.ron"
+        };
         read_ron_config(path).context(format!("Could not load IMAP config at path \"{}\"", path))?
     };
 
@@ -278,7 +289,7 @@ fn wait_enter() -> io::Result<()> {
 }
 
 /// Fake Mail Server
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 enum Args {
     /// Use this command for initial configuration of an email client
     Setup {
@@ -291,10 +302,10 @@ enum Args {
         /// Name of the application under test
         application: String,
         /// Protocol to test (`smtp`, `pop3`, or `imap`)
-        #[structopt(parse(try_from_str = parse_protocol))]
+        #[structopt(value_parser = value_parser!(Protocol))]
         protocol: Protocol,
         /// Configuration files for testcase
-        #[structopt(parse(from_os_str), required = true)]
+        #[structopt(value_parser, required = true)]
         testcases: Vec<PathBuf>,
         /// Global config file to specify ports, filters, ...
         #[structopt(long, short, default_value = "config.ron")]
@@ -306,10 +317,10 @@ enum Args {
         /// Name of the application under test
         application: String,
         /// Protocol to test (`smtp`, `pop3`, or `imap`)
-        #[structopt(parse(try_from_str = parse_protocol))]
+        #[structopt(value_parser = value_parser!(Protocol))]
         protocol: Protocol,
         /// Configuration file for testcase
-        #[structopt(parse(from_os_str), required = true)]
+        #[structopt(value_parser, required = true)]
         testcase: PathBuf,
         /// Global config file to specify ports, filters, ...
         #[structopt(long, short, default_value = "config.ron")]
@@ -319,7 +330,7 @@ enum Args {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let args = Args::from_args();
+    let args = Args::parse();
 
     // ---------------------------------------------------------------
 

@@ -24,6 +24,8 @@ pub struct Config {
     pub filter: Filter,
     #[serde(default = "default_script")]
     pub script: Option<String>,
+    #[serde(default = "default_setup_opportunistic_encryption")]
+    pub setup_opportunistic_encryption: bool,
 }
 
 fn default_filter() -> Filter {
@@ -32,4 +34,8 @@ fn default_filter() -> Filter {
 
 fn default_script() -> Option<String> {
     None
+}
+
+fn default_setup_opportunistic_encryption() -> bool {
+    false
 }

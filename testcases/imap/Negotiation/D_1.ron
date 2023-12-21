@@ -16,9 +16,9 @@
     hook_login: Terminate("Vulnerability, proceeded in plaintext."),
     hook_select: Terminate("Vulnerability, proceeded in plaintext."),
 
-	pkcs12: (
-		file: "certs/example.org.p12",
-		password: "changeit",
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
 	),
 	implicit_tls: false,
 )

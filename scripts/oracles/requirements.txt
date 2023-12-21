@@ -1,0 +1,6 @@
+pkcs1
+cryptography
+pycryptodome
+pyopenssl
+asn1crypto
+zmq

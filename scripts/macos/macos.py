@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
-# Copyright © 2021 fabian <fabian@FordPrefect.home>
+# Copyright © 2021 Fabian Ising
 #
 # Distributed under terms of the MIT license.
 

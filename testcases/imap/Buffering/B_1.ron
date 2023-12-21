@@ -19,9 +19,9 @@
 	// 2) Then try to inject response via STARTTLS suffix.
 	//starttls_response: Some("<tag> OK begin STARTTLS now.\r\n* CAPABILITY IMAP4REV1 AUTH=PLAIN AUTH=LOGIN\r\n2 OK capability done.\r\n"),
 
-	pkcs12: (
-		file: "certs/example.org.p12",
-		password: "changeit",
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
 	),
 	implicit_tls: false,
 )

@@ -44,13 +44,13 @@ $ mkcert -install
 
 ... and create new X.509 TLS certificates.
 
-The `fake_mail_server` uses the pkcs12 format for now, thus the command to create a locally-valid certificate for `example.org` is ...
+The `fake_mail_server` uses the PEM format for certificates, thus the command to create a locally-valid certificate for `example.org` is ...
 
 ```sh
-$ mkcert -pkcs12 example.org
+$ mkcert example.org
 ```
 
-Note: The default password used by mkcert is `changeit`.
+Note: mkcert creates the the certificate file as `[domain].pem` and the key file as `[domain]-key.pem`.
 
 ## 3) Setup a MUA for Testing
 
@@ -157,10 +157,10 @@ The existing test case looks as follows (with added comments):
     // Should the server transition to TLS after the STARTTLS command?
     starttls_transition: false,
 
-    // Path and password of the server certificate for STARTTLS transitions
-    pkcs12: (
-        file: "certs/example.org.p12",
-        password: "changeit",
+    // Cert and key path of the server certificate for STARTTLS transitions
+    cert: (
+        crt_path: "certs/example.org.pem",
+        key_path: "certs/example.org-key.pem",
     ),
     // Should the server use implicit TLS or STARTTLS?
     implicit_tls: false,

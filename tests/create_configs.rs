@@ -5,7 +5,7 @@ use std::{
     io::Write,
 };
 
-use fake_mail_server::{imap::config as ImapConfig, PKCS12};
+use fake_mail_server::{imap::config as ImapConfig, Cert};
 use imap_codec::{
     codec::Encode,
     core::NonEmptyVec,
@@ -130,12 +130,13 @@ fn ok_greeting_caps() {
             override_authenticate: None,
             folders: vec![],
             override_response: overrides,
-            pkcs12: PKCS12 {
-                file: "certs/example.org.p12".to_string(),
-                password: "changeit".to_string(),
+            cert: Cert {
+                crt_path: "certs/example.org.pem".to_string(),
+                key_path: "certs/example.org-key.pem".to_string(),
             },
             implicit_tls: false,
             recv_timeout: None,
+            oracle: false,
         };
         let path = format!(
             "generated_tests/imap/capability/greeting_ok_capability_{}.ron",
@@ -182,12 +183,13 @@ fn greetings() {
             override_authenticate: None,
             folders: vec![],
             override_response: Default::default(),
-            pkcs12: PKCS12 {
-                file: "certs/example.org.p12".to_string(),
-                password: "changeit".to_string(),
+            cert: Cert {
+                crt_path: "certs/example.org.pem".to_string(),
+                key_path: "certs/example.org-key.pem".to_string(),
             },
             implicit_tls: false,
             recv_timeout: None,
+            oracle: false,
         };
         let path = format!("generated_tests/imap/greeting/{}.ron", name);
         write_config(config, path);
@@ -269,12 +271,13 @@ fn ok_greeting_codes() {
             override_authenticate: None,
             folders: vec![],
             override_response: overrides,
-            pkcs12: PKCS12 {
-                file: "certs/example.org.p12".to_string(),
-                password: "changeit".to_string(),
+            cert: Cert {
+                crt_path: "certs/example.org.pem".to_string(),
+                key_path: "certs/example.org-key.pem".to_string(),
             },
             implicit_tls: false,
             recv_timeout: None,
+            oracle: false,
         };
         let path = format!("generated_tests/imap/greeting/ok_{}.ron", name);
         write_config(config, path);
@@ -311,12 +314,13 @@ fn starttls() {
             override_authenticate: None,
             folders: vec![],
             override_response: overrides,
-            pkcs12: PKCS12 {
-                file: "certs/example.org.p12".to_string(),
-                password: "changeit".to_string(),
+            cert: Cert {
+                crt_path: "certs/example.org.pem".to_string(),
+                key_path: "certs/example.org-key.pem".to_string(),
             },
             implicit_tls: false,
             recv_timeout: None,
+            oracle: false,
         };
         let path = format!("generated_tests/imap/starttls/{}.ron", name);
         write_config(config, path);

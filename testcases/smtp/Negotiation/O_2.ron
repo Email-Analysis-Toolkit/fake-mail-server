@@ -6,9 +6,9 @@
     stls_response: "502 Command not implemented\r\n",
     stls_make_transition: false,
 
-    pkcs12: (
-        file: "certs/example.org.p12",
-        password: "changeit",
-    ),
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
+	),
     implicit_tls: false,
 )

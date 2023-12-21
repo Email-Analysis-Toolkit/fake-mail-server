@@ -7,7 +7,7 @@
     hide_commands: ["ehlo", "starttls"],
 
     // Not used.
-    pkcs12: (file: "", password: ""),
+    cert: Cert (crt_path: "", key_path: ""),
 
     implicit_tls: false,
 )

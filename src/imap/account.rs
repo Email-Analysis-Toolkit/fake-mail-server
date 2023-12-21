@@ -2,6 +2,7 @@ use std::{
     convert::{AsRef, TryFrom},
     num::NonZeroU32,
     path::Path,
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use imap_codec::message::Mailbox;
@@ -32,6 +33,11 @@ impl Account {
         let mut rng = rand::thread_rng();
         let uid: NonZeroU32 = rng.gen();
         let amt: u32 = files.len() as u32;
+        let start = SystemTime::now();
+        let uidvalidity: u32 = start
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs() as u32;
 
         let mut folders = Vec::new();
 
@@ -41,7 +47,7 @@ impl Account {
                     &[String::from("\\Subscribed")],
                     ".",
                     name,
-                    rng.gen::<NonZeroU32>(),
+                    NonZeroU32::try_from(uidvalidity).unwrap(),
                     NonZeroU32::try_from(uid.get() + amt + 1).unwrap(),
                 );
 

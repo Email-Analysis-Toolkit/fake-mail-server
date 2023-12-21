@@ -1,0 +1,12 @@
+(
+    capabilities:     [ StartTLS, Auth([Plain]) ],
+    capabilities_tls: [ Auth([Plain]) ],
+
+    cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
+	),
+    implicit_tls: false,
+
+    hook_data: Pass("Allow email to be send."),
+)

@@ -1,0 +1,17 @@
+(
+	state: NotAuthenticated,
+	greeting: (
+		kind: Ok,
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, Auth(Plain), Auth(Login), StartTls]))),
+		text: Text("IMAP server ready.")
+	),
+	caps: [Imap4Rev1, Auth(Plain), Auth(Login), StartTls],
+	caps_tls: [Imap4Rev1, Auth(Plain), Auth(Login)],
+	caps_auth: [Imap4Rev1],
+	caps_tls_auth: [Imap4Rev1],
+    cert: Cert(
+        crt_path: "certs/example.org.pem",
+        key_path: "certs/example.org-key.pem",
+    ),
+	implicit_tls: false,
+)

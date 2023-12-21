@@ -4,10 +4,10 @@
     capabilities_tls: [Auth([Plain])],
     greeting: "354 Start mail input; End with <CRLF>.<CRLF>\r\n",
 
-    pkcs12: (
-        file: "certs/example.org.p12",
-        password: "changeit",
-    ),
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
+	),
     implicit_tls: false,
 
     hook_data: Pass("Allow email to be send."),

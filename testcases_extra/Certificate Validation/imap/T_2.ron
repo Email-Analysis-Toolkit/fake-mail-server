@@ -10,9 +10,9 @@
 	caps_auth: [Imap4Rev1],
 	caps_tls_auth: [Imap4Rev1],
 
-	pkcs12: (
-		file: "certs/example.org-unknown-root.p12",
-		password: "changeit",
+	cert: Cert(
+		crt_path: "certs/example.org-unknown-root.pem",
+		key_path: "certs/example.org-unknown-root-key.pem",
 	),
 	implicit_tls: false,
 )

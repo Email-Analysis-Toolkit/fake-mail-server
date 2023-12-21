@@ -68,9 +68,9 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
           override: true
-          components: clippy
+          components: clippy, rustfmt
       
       - name: Checkout code
         uses: actions/checkout@v2

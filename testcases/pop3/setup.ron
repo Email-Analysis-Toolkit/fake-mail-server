@@ -1,14 +1,14 @@
 (
     greeting: "+OK POP3 server ready.\r\n",
 
-    capa: ["STLS", "TOP", "USER", "RESP-CODES", "LOGIN-DELAY 900", "PIPELINING", "EXPIRE 60", "UIDL", "IMPLEMENTATION fake_mail_server"],
+    capa: ["STLS", "TOP", "RESP-CODES", "LOGIN-DELAY 900", "PIPELINING", "EXPIRE 60", "UIDL", "IMPLEMENTATION fake_mail_server"],
     capa_auth: ["TOP", "USER", "RESP-CODES", "LOGIN-DELAY 900", "PIPELINING", "EXPIRE 60", "UIDL", "IMPLEMENTATION fake_mail_server"],
     capa_tls: ["TOP", "USER", "RESP-CODES", "LOGIN-DELAY 900", "PIPELINING", "EXPIRE 60", "UIDL", "IMPLEMENTATION fake_mail_server"],
     capa_tls_auth: ["TOP", "USER", "RESP-CODES", "LOGIN-DELAY 900", "PIPELINING", "EXPIRE 60", "UIDL", "IMPLEMENTATION fake_mail_server"],
 
-    pkcs12: (
-        file: "certs/example.org.p12",
-        password: "changeit",
-    ),
+    cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
+	),
     implicit_tls: false,
 )

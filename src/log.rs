@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt};
 
-use ansi_term::{
-    Colour::{self, Blue as ColorServer, Red as ColorClient},
+use nu_ansi_term::{
+    Color::{self, Blue as ColorServer, Red as ColorClient},
     Style,
 };
 use tracing::{field::Field, span::Attributes, Event, Id, Level, Subscriber};
@@ -70,7 +70,7 @@ impl<S: Subscriber + for<'lookup> LookupSpan<'lookup>> Layer<S> for TraceLayer {
         if *event.metadata().level() == Level::ERROR {
             if let Some(span) = ctx.lookup_current() {
                 if let Some(session) = span.extensions().get::<Session>() {
-                    let color = Colour::Fixed(session.sid.chars().next().unwrap() as u8);
+                    let color = Color::Fixed(session.sid.chars().next().unwrap() as u8);
 
                     print!("{} | ", Style::default().on(color).paint(&session.sid));
                 }
@@ -111,7 +111,7 @@ impl<S: Subscriber + for<'lookup> LookupSpan<'lookup>> Layer<S> for TraceLayer {
             }
         };
 
-        let bg_color = Colour::Fixed(prefix.chars().next().unwrap() as u8);
+        let bg_color = Color::Fixed(prefix.chars().next().unwrap() as u8);
 
         if eventv.get("message").unwrap() == "accept compression" {
             println!(

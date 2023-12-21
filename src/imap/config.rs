@@ -6,7 +6,7 @@ use imap_codec::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::PKCS12;
+use crate::Cert;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Config<'a> {
@@ -43,8 +43,10 @@ pub struct Config<'a> {
     pub folders: Vec<String>,
     #[serde(default = "default_override_response")]
     pub override_response: HashMap<String, String>,
-    pub pkcs12: PKCS12,
+    pub cert: Cert,
     pub implicit_tls: bool,
+    #[serde(default)]
+    pub oracle: bool,
     pub recv_timeout: Option<u64>,
 }
 

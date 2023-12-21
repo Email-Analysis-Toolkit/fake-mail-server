@@ -1,13 +1,13 @@
 [package]
 name = "fake_mail_server"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Damian Poddebniak <poddebniak@fh-muenster.de>"]
 edition = "2018"
 default-run = "fake_mail_server"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-ansi_term = "*"
+nu-ansi-term = "0.49.0"
 anyhow = "*"
 async-compression = { version = "*", features = ["tokio", "deflate"] }
 async-trait = "*"
@@ -24,7 +24,7 @@ rand = "*"
 regex = "*"
 ron = "*"
 serde = "*"
-structopt = "*"
+clap = { version = "4.0", features = ["derive"] }
 tokio-native-tls = "*"
 tokio = { version = "*", features = ["rt-multi-thread", "io-util", "net", "time", "macros"] }
 tracing = "*"

@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 # samsung-reset.sh
-# Copyright (C) 2021 fabian <fabian@Agrajag>
+# Copyright (C) 2021 Fabian Ising
 #
 # Distributed under terms of the MIT license.
 #

@@ -241,7 +241,8 @@ pub trait Splitter {
                 }
                 Err(error) => {
                     info!(?error, event = "error", "read (metadata)");
-                    panic!()
+                    //panic!()
+                    return Err(vec![]);
                 }
             }
         }

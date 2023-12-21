@@ -40,16 +40,23 @@ async fn spawn_benign_smtp(main_config: Config) -> anyhow::Result<()> {
             sid=%sample_sid(),
         );
 
-        let socket = accept_new_connection(&listener, &main_config.filter)
+        match accept_new_connection(&listener, &main_config.filter)
             .instrument(span.clone())
-            .await?;
-        let test_config = test_config.clone();
+            .await
+        {
+            Ok(socket) => {
+                let test_config = test_config.clone();
 
-        tokio::spawn(
-            SmtpServer::new(ConsolidatedStream::new(Box::new(socket)), test_config)
-                .run()
-                .instrument(span),
-        );
+                tokio::spawn(
+                    SmtpServer::new(ConsolidatedStream::new(Box::new(socket)), test_config)
+                        .run()
+                        .instrument(span),
+                );
+            }
+            Err(error) => {
+                error!(?error, "failed to accept connection");
+            }
+        }
     }
 }
 
@@ -73,16 +80,23 @@ async fn spawn_benign_pop3(main_config: Config) -> anyhow::Result<()> {
             sid=%sample_sid(),
         );
 
-        let socket = accept_new_connection(&listener, &main_config.filter)
+        match accept_new_connection(&listener, &main_config.filter)
             .instrument(span.clone())
-            .await?;
-        let test_config = test_config.clone();
+            .await
+        {
+            Ok(socket) => {
+                let test_config = test_config.clone();
 
-        tokio::spawn(
-            Pop3Server::new(ConsolidatedStream::new(Box::new(socket)), test_config)
-                .run()
-                .instrument(span),
-        );
+                tokio::spawn(
+                    Pop3Server::new(ConsolidatedStream::new(Box::new(socket)), test_config)
+                        .run()
+                        .instrument(span),
+                );
+            }
+            Err(error) => {
+                error!(?error, "failed to accept connection");
+            }
+        }
     }
 }
 
@@ -114,22 +128,29 @@ async fn spawn_benign_imap(main_config: Config) -> anyhow::Result<()> {
             sid=%sample_sid(),
         );
 
-        let socket = accept_new_connection(&listener, &main_config.filter)
+        match accept_new_connection(&listener, &main_config.filter)
             .instrument(span.clone())
-            .await?;
-        let test_config = test_config.clone();
+            .await
+        {
+            Ok(socket) => {
+                let test_config = test_config.clone();
 
-        let account = account.clone();
+                let account = account.clone();
 
-        tokio::spawn(
-            ImapServer::new(
-                ConsolidatedStream::new(Box::new(socket)),
-                account,
-                test_config,
-            )
-            .run()
-            .instrument(span),
-        );
+                tokio::spawn(
+                    ImapServer::new(
+                        ConsolidatedStream::new(Box::new(socket)),
+                        account,
+                        test_config,
+                    )
+                    .run()
+                    .instrument(span),
+                );
+            }
+            Err(error) => {
+                error!(?error, "failed to accept connection");
+            }
+        }
     }
 }
 
@@ -244,8 +265,8 @@ async fn accept_new_connection(listener: &TcpListener, filter: &Filter) -> io::R
         let (stream, addr) = listener.accept().await?;
 
         if filter.accepts(&addr.to_string()) {
-            let local_addr = stream.local_addr().unwrap();
-            let peer_addr = stream.peer_addr().unwrap();
+            let local_addr = stream.local_addr()?;
+            let peer_addr = stream.peer_addr()?;
 
             info!(%local_addr, %peer_addr, "accept");
             break Ok(stream);

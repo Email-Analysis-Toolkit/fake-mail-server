@@ -1,18 +1,17 @@
 use std::{io, path::PathBuf, process::Command};
 
 use anyhow::Context;
+use clap::{value_parser, Parser};
 use fake_mail_server::{
     error::StringError,
     filter::Filter,
     imap::{account::Account, config::Config as ImapConfig, ImapServer},
     log::TraceLayer,
-    parse_protocol,
     pop3::{config::Config as Pop3Config, Pop3Server},
     smtp::{config::Config as SmtpConfig, SmtpServer},
     utils::sample_sid,
     ConsolidatedStream, Protocol, Splitter,
 };
-use structopt::StructOpt;
 use tokio::net::{TcpListener, TcpStream};
 use tracing::{error, info, info_span, Instrument};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, FmtSubscriber};
@@ -290,7 +289,7 @@ fn wait_enter() -> io::Result<()> {
 }
 
 /// Fake Mail Server
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 enum Args {
     /// Use this command for initial configuration of an email client
     Setup {
@@ -303,10 +302,10 @@ enum Args {
         /// Name of the application under test
         application: String,
         /// Protocol to test (`smtp`, `pop3`, or `imap`)
-        #[structopt(parse(try_from_str = parse_protocol))]
+        #[structopt(value_parser = value_parser!(Protocol))]
         protocol: Protocol,
         /// Configuration files for testcase
-        #[structopt(parse(from_os_str), required = true)]
+        #[structopt(value_parser, required = true)]
         testcases: Vec<PathBuf>,
         /// Global config file to specify ports, filters, ...
         #[structopt(long, short, default_value = "config.ron")]
@@ -318,10 +317,10 @@ enum Args {
         /// Name of the application under test
         application: String,
         /// Protocol to test (`smtp`, `pop3`, or `imap`)
-        #[structopt(parse(try_from_str = parse_protocol))]
+        #[structopt(value_parser = value_parser!(Protocol))]
         protocol: Protocol,
         /// Configuration file for testcase
-        #[structopt(parse(from_os_str), required = true)]
+        #[structopt(value_parser, required = true)]
         testcase: PathBuf,
         /// Global config file to specify ports, filters, ...
         #[structopt(long, short, default_value = "config.ron")]
@@ -331,7 +330,7 @@ enum Args {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let args = Args::from_args();
+    let args = Args::parse();
 
     // ---------------------------------------------------------------
 

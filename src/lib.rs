@@ -487,11 +487,14 @@ impl std::fmt::Display for Protocol {
     }
 }
 
-pub fn parse_protocol(src: &str) -> Result<Protocol, Box<dyn std::error::Error>> {
-    match src.to_lowercase().as_ref() {
-        "smtp" => Ok(Protocol::Smtp),
-        "pop3" => Ok(Protocol::Pop3),
-        "imap" => Ok(Protocol::Imap),
-        _ => Err("Protocol must be either `smtp`, `pop3`, or `imap`.".into()),
+impl std::str::FromStr for Protocol {
+    type Err = &'static str;
+    fn from_str(src: &str) -> Result<Self, Self::Err> {
+        match src.to_lowercase().as_ref() {
+            "smtp" => Ok(Protocol::Smtp),
+            "pop3" => Ok(Protocol::Pop3),
+            "imap" => Ok(Protocol::Imap),
+            _ => Err("Protocol must be either `smtp`, `pop3`, or `imap`."),
+        }
     }
 }

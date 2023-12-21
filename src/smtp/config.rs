@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::Deserialize;
 use smtp_codec::types::Capability;
 
-use crate::PKCS12;
+use crate::Cert;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Config {
@@ -20,7 +20,7 @@ pub struct Config {
     #[serde(default = "default_hide_commands")]
     pub hide_commands: Vec<String>,
     pub implicit_tls: bool,
-    pub pkcs12: PKCS12,
+    pub cert: Cert,
     #[serde(default = "default_override_response")]
     pub override_response: HashMap<String, String>,
     pub recv_timeout: Option<u64>,

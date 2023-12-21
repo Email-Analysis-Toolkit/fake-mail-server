@@ -1,3 +1,5 @@
+mod oracles;
+
 use std::{
     fmt::Debug,
     io::Error,
@@ -89,7 +91,10 @@ pub trait Splitter {
         true
     }
 
-    async fn recv<P, O>(&mut self, parse: P) -> Result<O, Vec<u8>>
+    async fn recv_nonblocking<P: Sync + Send, O: Sync + Send + Debug>(
+        &mut self,
+        parse: P,
+    ) -> Result<O, Vec<u8>>
     where
         P: Fn(&[u8]) -> IResult<&[u8], O> + Sync + Send,
         O: Debug + Send + 'static,
@@ -167,8 +172,83 @@ pub trait Splitter {
         }
     }
 
+    async fn recv<P, O>(&mut self, parse: P) -> Result<O, Vec<u8>>
+    where
+        P: Fn(&[u8]) -> IResult<&[u8], O> + Sync + Send,
+        O: Debug + Send + 'static,
+    {
+        let mut read_buffer = [0u8; 2048];
+
+        loop {
+            // Try to split off a full command from self.buffer first.
+            match split_off_message(self.buffer(), &parse) {
+                SplitOffResult::Ok((consumed, parsed)) => {
+                    debug!(consumed=%escape(&consumed), remaining=%escape(self.buffer()), ?parsed, "Parsing successful");
+
+                    if !self.buffer().is_empty() {
+                        debug!(len = self.buffer().len(), "Buffer still has bytes");
+                    }
+
+                    return Ok(parsed);
+                }
+                SplitOffResult::Incomplete(needed) => {
+                    debug!(?needed, "Parsing needs more data");
+                }
+                SplitOffResult::LiteralAck => {
+                    self.incomplete().await;
+                }
+                SplitOffResult::Failure => {
+                    error!(
+                    remainder=%escape(self.buffer()),
+                    "Parsing error/failure",
+                    );
+
+                    let flushed = self.buffer().to_vec();
+                    self.buffer().clear();
+                    debug!("Buffer cleared");
+
+                    return Err(flushed);
+                }
+            }
+
+            let recv_timeout = self.recv_timeout();
+            let res = match recv_timeout.as_secs() {
+                0 => self.stream().read(&mut read_buffer).await,
+                _ => match timeout(recv_timeout, self.stream().read(&mut read_buffer)).await {
+                    Ok(res) => res,
+                    Err(_) => {
+                        error!(event = "recv timeout", "read (metadata)");
+                        return Err(vec![]);
+                    }
+                },
+            };
+
+            // If no command (and no error) was generated, e.g. parse was `Incomplete`, try to read more data...
+            match res {
+                Ok(0) => {
+                    info!(event = "EOF", "read (metadata)");
+                    error!("Connection was closed.");
+                    return Err(vec![]);
+                }
+                Ok(amt) => {
+                    let msg = escape_trace(&read_buffer[..amt]).trim_end().to_string();
+                    info!(%msg, amt, tls=self.stream().is_tls(), "read");
+
+                    // Got some bytes. Append them to the internal buffer.
+                    // The next iteration of the loop could yield a command.
+                    // If not, we will end up here again :-)
+                    self.buffer().extend_from_slice(&read_buffer[..amt]);
+                }
+                Err(error) => {
+                    info!(?error, event = "error", "read (metadata)");
+                    panic!()
+                }
+            }
+        }
+    }
+
     async fn accept_tls(&mut self) {
-        info!(identity = %self.pkcs12().file, "accept tls");
+        info!(identity = %self.cert().crt_path, "accept tls");
 
         if !self.buffer().is_empty() {
             error!(
@@ -178,10 +258,10 @@ pub trait Splitter {
             error!("Keep the command injection vulnerability for demonstration purposes.");
         }
 
-        let file = self.pkcs12().file;
-        let pass = self.pkcs12().password;
+        let crt_file = self.cert().crt_path;
+        let key_file = self.cert().key_path;
 
-        self.stream().accept_tls(&file, &pass).await;
+        self.stream().accept_tls(&crt_file, &key_file).await;
     }
 
     async fn accept_compression(&mut self) {
@@ -198,17 +278,16 @@ pub trait Splitter {
 
     fn stream(&mut self) -> &mut ConsolidatedStream;
 
-    fn pkcs12(&self) -> PKCS12;
+    fn cert(&self) -> Cert;
 
     async fn incomplete(&mut self) {}
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PKCS12 {
-    pub file: String,
-    pub password: String,
+pub struct Cert {
+    pub crt_path: String,
+    pub key_path: String,
 }
-
 pub trait Stream: AsyncRead + AsyncWrite + Send + Sync + Unpin + 'static {}
 
 impl<T> Stream for T where T: AsyncRead + AsyncWrite + Send + Sync + Unpin + 'static {}
@@ -307,7 +386,7 @@ impl ConsolidatedStream {
         self.is_tls
     }
 
-    pub async fn accept_tls(&mut self, pkcs12_path: &str, pkcs12_password: &str) {
+    pub async fn accept_tls(&mut self, pem_path: &str, key_path: &str) {
         let stream = {
             let mut stream: Box<dyn Stream> = Box::new(Dummy {});
             std::mem::swap(&mut stream, &mut self.stream);
@@ -315,10 +394,16 @@ impl ConsolidatedStream {
         };
 
         let identity = {
-            let der_file = std::fs::read(pkcs12_path)
-                .unwrap_or_else(|_| panic!("Could not open PKCS12 file \"{}\".", pkcs12_path));
-            tokio_native_tls::native_tls::Identity::from_pkcs12(&der_file, pkcs12_password)
-                .expect("Could not read pkcs12 file.")
+            let crt_file = std::fs::read(pem_path)
+                .unwrap_or_else(|_| panic!("Could not open Cert file \"{}\".", pem_path));
+            let key_file = std::fs::read(key_path)
+                .unwrap_or_else(|_| panic!("Could not open Key file \"{}\".", key_path));
+            tokio_native_tls::native_tls::Identity::from_pkcs8(&crt_file, &key_file).expect(
+                &format!(
+                    "Could not read cert ({}) or key ({}) file.",
+                    pem_path, key_path
+                ),
+            )
         };
 
         let acceptor =

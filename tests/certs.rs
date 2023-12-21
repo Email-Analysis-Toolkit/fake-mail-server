@@ -1,7 +1,8 @@
 use std::fs;
 
 #[test]
-fn test_pkcs12() {
-    let der = fs::read("certs/example.org.p12").unwrap();
-    tokio_native_tls::native_tls::Identity::from_pkcs12(&der, "changeit").unwrap();
+fn test_cert() {
+    let crt = fs::read("certs/example.org.pem").unwrap();
+    let key = fs::read("certs/example.org-key.pem").unwrap();
+    tokio_native_tls::native_tls::Identity::from_pkcs8(&crt, &key).unwrap();
 }

@@ -1,0 +1,19 @@
+(
+	state: NotAuthenticated,
+	greeting: (
+		kind: Ok,
+		code: Some(Capability(NonEmptyVec([Imap4Rev1, Auth(Plain), Auth(Login), Idle]))),
+		text: Text("setup greeting done.")
+	),
+	caps: [Imap4Rev1, StartTls, LoginDisabled, Idle],
+	caps_tls: [Imap4Rev1, Auth(Plain), Auth(Login), Idle],
+	caps_auth: [Imap4Rev1, Idle],
+	caps_tls_auth: [Imap4Rev1, Idle],
+
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
+	),
+	implicit_tls: true,
+)
+

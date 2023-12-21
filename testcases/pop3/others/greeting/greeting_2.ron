@@ -6,9 +6,9 @@
     capa_tls: ["TOP", "USER", "RESP-CODES", "LOGIN-DELAY 900", "PIPELINING", "EXPIRE 60", "UIDL"],
     capa_tls_auth: ["TOP", "USER", "RESP-CODES", "LOGIN-DELAY 900", "PIPELINING", "EXPIRE 60", "UIDL"],
 
-    pkcs12: (
-        file: "certs/example.org.p12",
-        password: "changeit",
-    ),
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
+	),
     implicit_tls: false,
 )

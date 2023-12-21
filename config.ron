@@ -6,4 +6,5 @@
     filter: Reject([]),
 
     // script: Some("scripts/nixos/reset.sh"),
+    // setup_opportunistic_encryption: true,
 )

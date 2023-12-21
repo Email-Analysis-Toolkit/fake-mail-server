@@ -13,9 +13,9 @@
 	// Test first without this line. Then uncomment and see if behaviour is different.
 	// starttls_response: Some("<tag> OK begin STARTTLS now.\r\n* BYE close the connection please.\r\n"),
 
-	pkcs12: (
-		file: "certs/example.org.p12",
-		password: "changeit",
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
 	),
 	implicit_tls: false,
 )

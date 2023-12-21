@@ -16,9 +16,9 @@
     // Uncomment the following line and see if client proceeds now.
     stls_response: "+OK Begin fake TLS negotiation now.\r\n¹³¹²³¹²³¹²³¹²³²¹³¹²³¹²³²¹³¹²³¹²³¹²³¹²³",
 
-    pkcs12: (
-        file: "certs/example.org.p12",
-        password: "changeit",
-    ),
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
+	),
     implicit_tls: false,
 )

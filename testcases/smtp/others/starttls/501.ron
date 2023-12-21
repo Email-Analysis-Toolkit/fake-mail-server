@@ -6,10 +6,10 @@
         "starttls": "501 Syntax error in command or arguments\r\n",
     },
 
-    pkcs12: (
-        file: "certs/example.org.p12",
-        password: "changeit",
-    ),
+	cert: Cert(
+		crt_path: "certs/example.org.pem",
+		key_path: "certs/example.org-key.pem",
+	),
     implicit_tls: false,
 
     hook_data: Pass("Allow email to be send."),

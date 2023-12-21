@@ -27,7 +27,11 @@ async fn spawn_benign_smtp(main_config: Config) -> anyhow::Result<()> {
         .context(format!("Failed to bind to {}", &main_config.smtp))?;
 
     let test_config: SmtpConfig = {
-        let path = "testcases/smtp/setup.ron";
+        let path = if main_config.setup_opportunistic_encryption {
+            "testcases/smtp/setup_opportunistic_encryption.ron"
+        } else {
+            "testcases/smtp/setup.ron"
+        };
         read_ron_config(path).context(format!("Could not load SMTP config at path \"{}\"", path))?
     };
 
@@ -56,7 +60,11 @@ async fn spawn_benign_pop3(main_config: Config) -> anyhow::Result<()> {
         .context(format!("Failed to bind to {}", &main_config.pop3))?;
 
     let test_config: Pop3Config = {
-        let path = "testcases/pop3/setup.ron";
+        let path = if main_config.setup_opportunistic_encryption {
+            "testcases/pop3/setup_opportunistic_encryption.ron"
+        } else {
+            "testcases/pop3/setup.ron"
+        };
         read_ron_config(path).context(format!("Could not load POP3 config at path \"{}\"", path))?
     };
 
@@ -85,7 +93,11 @@ async fn spawn_benign_imap(main_config: Config) -> anyhow::Result<()> {
         .context(format!("Failed to bind to {}", &main_config.imap))?;
 
     let test_config: ImapConfig = {
-        let path = "testcases/imap/setup.ron";
+        let path = if main_config.setup_opportunistic_encryption {
+            "testcases/imap/setup_opportunistic_encryption.ron"
+        } else {
+            "testcases/imap/setup.ron"
+        };
         read_ron_config(path).context(format!("Could not load IMAP config at path \"{}\"", path))?
     };
 

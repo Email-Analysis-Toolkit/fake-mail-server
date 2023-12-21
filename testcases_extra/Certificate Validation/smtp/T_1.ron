@@ -3,9 +3,9 @@
 
     capabilities_tls: [Auth([Plain])],
 
-    pkcs12: (
-        file: "certs/example.org-self-signed.p12",
-        password: "changeit",
+    cert: Cert(
+        crt_path: "certs/example.org-self-signed.pem",
+        key_path: "certs/example.org-self-signed-key.pem",
     ),
     implicit_tls: false,
 )

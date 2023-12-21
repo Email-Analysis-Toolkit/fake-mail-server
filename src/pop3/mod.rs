@@ -16,7 +16,7 @@ use pop3_codec::{
 };
 use tracing::{debug, error, info};
 
-use crate::{utils::escape, ConsolidatedStream, Splitter, PKCS12};
+use crate::{utils::escape, Cert, ConsolidatedStream, Splitter};
 
 pub mod config;
 
@@ -50,7 +50,7 @@ impl Splitter for Pop3Server {
     async fn run(mut self) {
         if self.config.implicit_tls {
             self.stream
-                .accept_tls(&self.config.pkcs12.file, &self.config.pkcs12.password)
+                .accept_tls(&self.config.cert.crt_path, &self.config.cert.key_path)
                 .await;
         }
 
@@ -353,8 +353,8 @@ impl Splitter for Pop3Server {
         &mut self.stream
     }
 
-    fn pkcs12(&self) -> PKCS12 {
-        self.config.pkcs12.clone()
+    fn cert(&self) -> Cert {
+        self.config.cert.clone()
     }
 
     fn recv_timeout(&self) -> Duration {

@@ -1,5 +1,6 @@
 use std::{
     convert::{TryFrom, TryInto},
+    num::NonZeroU32,
     time::Duration,
 };
 
@@ -16,7 +17,7 @@ use imap_codec::{
         AuthenticateData, Command, CommandBody, Strategy,
     },
     imap_types::bounded_static::IntoBoundedStatic,
-    message::{AuthMechanism, Mailbox, Tag},
+    message::{AuthMechanism, Tag},
     response::{
         data::{Capability, StatusAttributeValue},
         Code, Continue, Data, Status,
@@ -25,9 +26,15 @@ use imap_codec::{
     state::State,
 };
 use nom::{IResult, Needed};
+use tokio::time::sleep;
 use tracing::{debug, error, info};
 
-use crate::{imap::account::Account, utils::escape, ConsolidatedStream, Splitter, PKCS12};
+use crate::{
+    imap::{account::Account, responses::attr_to_data_oracles},
+    oracles,
+    utils::escape,
+    Cert, ConsolidatedStream, Splitter,
+};
 
 pub mod account;
 pub mod config;
@@ -56,6 +63,10 @@ impl<'a> ImapServer<'a> {
         let mut out = Vec::with_capacity(512);
         msg.encode(&mut out).unwrap();
         self.send_raw(&out).await;
+    }
+
+    fn is_oracle(&self) -> bool {
+        self.config.oracle
     }
 
     /// "Statemachine"
@@ -439,11 +450,7 @@ impl<'a> ImapServer<'a> {
                     CommandBody::Idle => {
                         self.send(Continue::basic(None, "idle from auth.").unwrap())
                             .await;
-                        self.send(Data::Exists(4)).await;
-
-                        self.recv(idle_done).await.unwrap();
-                        self.send(Status::ok(Some(command.tag), None, "idle done.").unwrap())
-                            .await;
+                        self.state = State::IdleAuthenticated(command.tag);
                     }
 
                     CommandBody::Compress { .. } => {
@@ -582,35 +589,115 @@ impl<'a> ImapServer<'a> {
                 CommandBody::Search { criteria, uid, .. } => {
                     if uid {
                         match criteria {
+                            SearchKey::And(x) => {
+                                let crit: &SearchKey;
+                                if let [SearchKey::SequenceSet(..), act_crit] = &x.as_ref()[..2] {
+                                    crit = act_crit;
+                                } else {
+                                    crit = &x.as_ref()[0];
+                                }
+                                match crit {
+                                    SearchKey::Header(..) => {
+                                        self.send(Data::Search(vec![])).await;
+                                        self.send(
+                                            Status::ok(
+                                                Some(command.tag),
+                                                None,
+                                                "header search done.",
+                                            )
+                                            .unwrap(),
+                                        )
+                                        .await;
+                                    }
+                                    SearchKey::Deleted => {
+                                        self.send(Data::Search(vec![])).await;
+                                        self.send(
+                                            Status::ok(
+                                                Some(command.tag),
+                                                None,
+                                                "delete search done.",
+                                            )
+                                            .unwrap(),
+                                        )
+                                        .await;
+                                    }
+                                    _ => {
+                                        let selected =
+                                            self.account.get_folder_by_name(selected).unwrap();
+                                        let mut uids = vec![];
+                                        for x in selected.mails.iter() {
+                                            uids.push(x.uid);
+                                        }
+                                        if self.is_oracle() {
+                                            self.send_raw(oracles::search().as_bytes()).await;
+                                        } else {
+                                            self.send(Data::Search(uids)).await;
+                                        }
+                                        self.send(
+                                            Status::ok(Some(command.tag), None, "uid search done.")
+                                                .unwrap(),
+                                        )
+                                        .await;
+                                    }
+                                }
+                            }
                             SearchKey::Header(..) => {
                                 self.send(Data::Search(vec![])).await;
                                 self.send(
-                                    Status::ok(Some(command.tag), None, "search done.").unwrap(),
+                                    Status::ok(Some(command.tag), None, "header search done.")
+                                        .unwrap(),
+                                )
+                                .await;
+                            }
+                            SearchKey::Deleted => {
+                                self.send(Data::Search(vec![])).await;
+                                self.send(
+                                    Status::ok(Some(command.tag), None, "delete search done.")
+                                        .unwrap(),
                                 )
                                 .await;
                             }
                             _ => {
-                                match selected {
-                                    Mailbox::Inbox => {
-                                        self.send(Data::Search(vec![
-                                            1.try_into().unwrap(),
-                                            2.try_into().unwrap(),
-                                            3.try_into().unwrap(),
-                                        ]))
-                                        .await;
-                                    }
-                                    Mailbox::Other(_) => {
-                                        self.send(Data::Search(vec![])).await;
+                                if self.is_oracle() {
+                                    self.send_raw(oracles::search().as_bytes()).await;
+                                } else {
+                                    let selected = self.account.get_folder_by_name(selected);
+                                    match selected {
+                                        Some(selected) => {
+                                            let mut uids = vec![];
+                                            for mail in selected.mails {
+                                                uids.push(mail.uid.try_into().unwrap());
+                                            }
+                                            self.send(Data::Search(uids)).await;
+                                        }
+                                        _ => {
+                                            self.send(Data::Search(vec![])).await;
+                                        }
                                     }
                                 }
                                 self.send(
-                                    Status::ok(Some(command.tag), None, "search done.").unwrap(),
+                                    Status::ok(Some(command.tag), None, "uid search done.")
+                                        .unwrap(),
                                 )
                                 .await;
                             }
-                        }
+                        };
                     } else {
-                        self.send(Data::Search(vec![])).await;
+                        let selected = self.account.get_folder_by_name(selected);
+                        match selected {
+                            Some(selected) => {
+                                let mut ids = vec![];
+                                for id in 1..selected.mails.len() + 1 {
+                                    ids.push(
+                                        NonZeroU32::try_from(u32::try_from(id).unwrap()).unwrap(),
+                                    );
+                                }
+                                self.send(Data::Search(ids)).await;
+                            }
+                            _ => {
+                                self.send(Data::Search(vec![])).await;
+                            }
+                        }
                         self.send(Status::ok(Some(command.tag), None, "search done.").unwrap())
                             .await;
                     }
@@ -647,32 +734,50 @@ impl<'a> ImapServer<'a> {
                         let iterator = sequence_set.iter(Strategy::Naive { largest });
 
                         for uid in iterator.take(500) {
-                            if let Some((seq, mail)) = selected
-                                .mails
-                                .iter()
-                                .enumerate()
-                                .find(|(_, mail)| mail.uid == uid)
-                            {
-                                let res = responses::attr_to_data(mail, &fetch_attrs);
-                                let resp = format!("* {} FETCH ({})\r\n", seq + 1, res);
-                                self.send_raw(resp.as_bytes()).await;
-                            } else {
-                                debug!(uid, "No such mail. Sending no mail.");
-                            }
+                            match self.is_oracle() {
+                                true => {
+                                    let res = attr_to_data_oracles(uid.into(), &fetch_attrs);
+                                    let resp = format!("* {} FETCH ({})\r\n", uid, res);
+                                    self.send_raw(resp.as_bytes()).await;
+                                }
+                                false => {
+                                    if let Some((seq, mail)) = selected
+                                        .mails
+                                        .iter()
+                                        .enumerate()
+                                        .find(|(_, mail)| mail.uid == uid)
+                                    {
+                                        let res = responses::attr_to_data(mail, &fetch_attrs);
+                                        let resp = format!("* {} FETCH ({})\r\n", seq + 1, res);
+                                        self.send_raw(resp.as_bytes()).await;
+                                    } else {
+                                        debug!(uid, "No such mail. Sending no mail.");
+                                    }
+                                }
+                            };
                         }
                     } else {
                         let largest = (selected.mails.len() as u32).try_into().unwrap();
                         let iterator = sequence_set.iter(Strategy::Naive { largest });
 
                         for seq in iterator.take(500) {
-                            // Safe subtraction: this code is not reachable with seq == 0
-                            if let Some(mail) = selected.mails.get(seq.get() as usize - 1) {
-                                let res = responses::attr_to_data(mail, &fetch_attrs);
-                                let resp = format!("* {} FETCH ({})\r\n", seq, res);
-                                self.send_raw(resp.as_bytes()).await;
-                            } else {
-                                debug!(uid, "No such mail. Sending no mail.");
-                            }
+                            match self.is_oracle() {
+                                true => {
+                                    let res = attr_to_data_oracles(seq.into(), &fetch_attrs);
+                                    let resp = format!("* {} FETCH ({})\r\n", seq, res);
+                                    self.send_raw(resp.as_bytes()).await;
+                                }
+                                false => {
+                                    // Safe subtraction: this code is not reachable with seq == 0
+                                    if let Some(mail) = selected.mails.get(seq.get() as usize - 1) {
+                                        let res = responses::attr_to_data(mail, &fetch_attrs);
+                                        let resp = format!("* {} FETCH ({})\r\n", seq, res);
+                                        self.send_raw(resp.as_bytes()).await;
+                                    } else {
+                                        debug!(uid, "No such mail. Sending no mail.");
+                                    }
+                                }
+                            };
                         }
                     }
 
@@ -690,11 +795,7 @@ impl<'a> ImapServer<'a> {
                 CommandBody::Idle => {
                     self.send(Continue::basic(None, "idle from selected.").unwrap())
                         .await;
-                    self.send(Data::Exists(4)).await;
-
-                    self.recv(idle_done).await.unwrap();
-                    self.send(Status::ok(Some(command.tag), None, "idle done.").unwrap())
-                        .await;
+                    self.state = State::IdleSelected(command.tag, selected.clone());
                 }
 
                 bad_command => {
@@ -712,15 +813,61 @@ impl<'a> ImapServer<'a> {
             State::Logout => {
                 info!("Logout.",);
             }
-            State::IdleAuthenticated(_tag) => {
-                // Can't receive command here.
+            State::IdleAuthenticated(..) => {
+                // Nothing to do here, this should never be reached since DONE has to be parsed separately below
             }
-            State::IdleSelected(_tag, _folder) => {
-                // Can't receive command here.
+            State::IdleSelected(..) => {
+                // Nothing to do here, this should never be reached since DONE has to be parsed separately below
             }
         }
 
-        true
+        match self.state.clone() {
+            State::IdleAuthenticated(tag) => {
+                sleep(Duration::from_secs(1)).await;
+
+                self.recv(idle_done).await.unwrap();
+                self.send(
+                    Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.").unwrap(),
+                )
+                .await;
+
+                self.state = State::Authenticated;
+            }
+            State::IdleSelected(tag, folder) => loop {
+                debug!("Idling");
+                if self.is_oracle() {
+                    let idle_data = oracles::idle();
+                    self.send_raw(idle_data.as_bytes()).await;
+
+                    match self.recv_nonblocking(idle_done).await {
+                        Err(_) => {}
+                        Ok(_) => {
+                            self.send(
+                                Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.")
+                                    .unwrap(),
+                            )
+                            .await;
+
+                            self.state = State::Selected(folder);
+                            break;
+                        }
+                    }
+                } else {
+                    let current_timeout = self.recv_timeout();
+                    self.config.recv_timeout = Some(0);
+                    self.recv(idle_done).await.unwrap();
+                    self.config.recv_timeout = Some(current_timeout.as_secs());
+                    self.send(
+                        Status::ok(Some(Tag::try_from(tag).unwrap()), None, "idle done.").unwrap(),
+                    )
+                    .await;
+                    self.state = State::Selected(folder);
+                    break;
+                }
+            },
+            _ => {}
+        }
+        return true;
     }
 }
 
@@ -839,8 +986,8 @@ impl<'a> Splitter for ImapServer<'a> {
         &mut self.stream
     }
 
-    fn pkcs12(&self) -> PKCS12 {
-        self.config.pkcs12.clone()
+    fn cert(&self) -> Cert {
+        self.config.cert.clone()
     }
 
     fn recv_timeout(&self) -> Duration {

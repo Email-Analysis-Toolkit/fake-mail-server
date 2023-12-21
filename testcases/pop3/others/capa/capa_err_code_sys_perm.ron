@@ -10,9 +10,9 @@
     capa_tls:      [], // not interested after STARTTLS
     capa_tls_auth: [], // not interested after STARTTLS
 
-    pkcs12: (
-        file: "<not needed>",
-        password: "<not needed>",
-    ),
+	cert: Cert(
+		crt_path: "<not needed>",
+		key_path: "<not needed>",
+	),
     implicit_tls: false,
 )

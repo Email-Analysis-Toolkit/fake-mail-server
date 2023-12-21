@@ -70,7 +70,7 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
-          components: clippy
+          components: clippy, rustfmt
       
       - name: Checkout code
         uses: actions/checkout@v2

@@ -22,13 +22,13 @@ use rand::{thread_rng, Rng, RngCore};
 use regex::Regex;
 use tracing::error;
 
-use crate::imap::{
-    account::{Folder, Mail},
-    ImapServer,
+use crate::{
+    imap::{
+        account::{Folder, Mail},
+        ImapServer,
+    },
+    oracles,
 };
-
-#[path = "../oracles/mod.rs"]
-mod oracles;
 
 static RNGINIT: Once = Once::new();
 static mut UIDVALIDITY: u32 = 0;

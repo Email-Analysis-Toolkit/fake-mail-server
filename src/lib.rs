@@ -1,5 +1,3 @@
-mod oracles;
-
 use std::{
     fmt::Debug,
     io::Error,
@@ -30,6 +28,7 @@ pub mod error;
 pub mod filter;
 pub mod imap;
 pub mod log;
+pub mod oracles;
 pub mod pop3;
 pub mod predictor;
 pub mod smtp;

@@ -146,7 +146,7 @@ impl Splitter for SmtpServer {
                     self.send(Response::other(250, "...")).await;
                 }
                 Command::Rset => {
-                    unimplemented!()
+                    self.send(Response::other(250, "...")).await;
                 }
                 Command::Vrfy { .. } => {
                     unimplemented!()

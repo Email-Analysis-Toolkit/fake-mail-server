@@ -312,13 +312,13 @@ fn wait_enter() -> io::Result<()> {
 /// Fake Mail Server
 #[derive(Debug, Parser)]
 enum Args {
-    /// Use this command for initial configuration of an email client
-    Setup {
+    /// Start a benign (but fake) email server
+    Start {
         /// Global config file
         #[structopt(long, short, default_value = "config.ron")]
         config: String,
     },
-    /// Use this command to execute specific tests against an email client
+    /// Execute multiple tests against an email client
     Test {
         /// Name of the application under test
         application: String,
@@ -332,9 +332,8 @@ enum Args {
         #[structopt(long, short, default_value = "config.ron")]
         config: String,
     },
-
-    /// Use this command to execute a specific testcase in a loop against an email client
-    LoopTest {
+    /// Execute a single test repeatedly against an email client
+    TestLoop {
         /// Name of the application under test
         application: String,
         /// Protocol to test (`smtp`, `pop3`, or `imap`)
@@ -370,9 +369,9 @@ async fn main() -> anyhow::Result<()> {
             .finish()
             .with(TraceLayer {
                 protocol: match args {
-                    Args::Setup { .. } => None,
+                    Args::Start { .. } => None,
                     Args::Test { protocol, .. } => Some(protocol),
-                    Args::LoopTest { protocol, .. } => Some(protocol),
+                    Args::TestLoop { protocol, .. } => Some(protocol),
                 },
             })
     };
@@ -382,9 +381,9 @@ async fn main() -> anyhow::Result<()> {
     // ---------------------------------------------------------------
 
     let main_config: Config = match args {
-        Args::Setup { ref config }
+        Args::Start { ref config }
         | Args::Test { ref config, .. }
-        | Args::LoopTest { ref config, .. } => read_ron_config(config)
+        | Args::TestLoop { ref config, .. } => read_ron_config(config)
             .context(format!("Could not load main config at path \"{}\"", config))?,
     };
 
@@ -395,7 +394,7 @@ async fn main() -> anyhow::Result<()> {
     println!();
 
     match args {
-        Args::Setup { .. } => {
+        Args::Start { .. } => {
             tokio::try_join!(
                 async {
                     spawn_benign_smtp(main_config.clone())
@@ -572,7 +571,7 @@ async fn main() -> anyhow::Result<()> {
             }
         }
 
-        Args::LoopTest {
+        Args::TestLoop {
             protocol,
             testcase,
             application,

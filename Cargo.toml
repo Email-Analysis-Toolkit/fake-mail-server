@@ -11,7 +11,7 @@ nu-ansi-term = "0.49.0"
 anyhow = "*"
 async-compression = { version = "*", features = ["tokio", "deflate"] }
 async-trait = "*"
-base64 = "0.21.5"
+base64 = "0.21.7"
 bounded-static = "*"
 bytes = "*"
 futures = "*"
@@ -24,12 +24,12 @@ rand = "*"
 regex = "*"
 ron = "*"
 serde = "*"
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 tokio-native-tls = "*"
 tokio = { version = "*", features = ["rt-multi-thread", "io-util", "net", "time", "macros"] }
 tracing = "*"
-tracing-appender = "0.2.2"
-tracing-subscriber = { version = "0.3.17", features = ["fmt", "json", "env-filter"] }
+tracing-appender = "0.2.3"
+tracing-subscriber = { version = "0.3.18", features = ["fmt", "json", "env-filter"] }
 zmq = "*"
 
 smtp-codec = { version = "0.2", features = ["serdex"] }
